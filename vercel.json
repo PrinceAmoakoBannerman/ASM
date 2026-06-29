@@ -1,0 +1,5 @@
+{
+  "buildCommand": "cd assetflow && npm install && npm run build",
+  "outputDirectory": "assetflow/dist",
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+}
