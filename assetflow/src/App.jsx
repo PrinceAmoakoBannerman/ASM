@@ -5255,7 +5255,7 @@ const substationSLDs = [
   { id:"SS-02", name:"Tema",        area:"Greater Accra", voltage:"161kV", equipment:38, sldStatus:"Digitized",  linked:35, pending:3,  last:"2026-06-08" },
   { id:"SS-03", name:"Pokuase",     area:"Greater Accra", voltage:"161kV", equipment:56, sldStatus:"Digitized",  linked:50, pending:6,  last:"2026-05-30" },
   { id:"SS-04", name:"Kumasi",      area:"Ashanti",       voltage:"161kV", equipment:64, sldStatus:"Digitized",  linked:64, pending:0,  last:"2026-06-01" },
-  { id:"SS-05", name:"Takoradi",    area:"Western",       voltage:"225kV", equipment:48, sldStatus:"Digitized",  linked:40, pending:8,  last:"2026-06-05" },
+  { id:"SS-05", name:"Takoradi",    area:"Western",       voltage:"161kV", equipment:48, sldStatus:"Digitized",  linked:40, pending:8,  last:"2026-06-05" },
   { id:"SS-06", name:"Tamale",      area:"Northern",      voltage:"161kV", equipment:34, sldStatus:"Pending",    linked:0,  pending:34, last:"-" },
   { id:"SS-07", name:"Bolgatanga",  area:"Upper East",    voltage:"69kV",  equipment:22, sldStatus:"Pending",    linked:0,  pending:22, last:"-" },
   { id:"SS-08", name:"Sunyani",     area:"Bono",          voltage:"161kV", equipment:30, sldStatus:"Pending",    linked:0,  pending:30, last:"-" },
@@ -5313,9 +5313,14 @@ function SubstationSLDPage({ dark, toast }) {
         title="Delete substations" danger
         body={`Permanently delete ${selected.size} selected substation${selected.size>1?"s":""}? This cannot be undone.`}
         onConfirm={handleDelete}/>
-      <div style={{ marginBottom:24 }}>
-        <div style={{ fontSize:22, fontWeight:800, color:th.text }}>Substation Single Line Diagrams</div>
-        <div style={{ fontSize:13, color:th.textMid, marginTop:4 }}>Interactive SLD interface linked to D365 asset database — Pilot: 5 substations</div>
+      <div style={{ display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:24,flexWrap:"wrap",gap:12 }}>
+        <div>
+          <div style={{ fontSize:22, fontWeight:800, color:th.text }}>Substation Single Line Diagrams</div>
+          <div style={{ fontSize:13, color:th.textMid, marginTop:4 }}>Interactive SLD interface linked to D365 asset database — Pilot: 8 substations</div>
+        </div>
+        <ExportBtns dark={dark} title="Substation SLD Register" subtitle="GRIDCo substation single line diagram status" filename="GRIDCo_Substations"
+          columns={[{label:"ID",key:"id"},{label:"Name",key:"name"},{label:"Area",key:"area"},{label:"Voltage",key:"voltage"},{label:"Equipment",key:"equipment"},{label:"SLD Status",key:"sldStatus"},{label:"Linked",key:"linked"}]}
+          rows={rows}/>
       </div>
       <div className="rg-4" style={{ marginBottom:24 }}>
         {sldStats.map((s,i)=>{ const Ic=s.icon; return (
@@ -5465,11 +5470,13 @@ function SubstationSLDPage({ dark, toast }) {
 
 /* ── GIS / Transmission data ── */
 const transmissionCorridors = [
-  { id:"TL-01", name:"Akosombo – Achimota", voltage:"161kV", length:250, towers:312, drones:"Active",    status:"Operational",       lastInspection:"2026-05-20" },
-  { id:"TL-02", name:"Prestea – Takoradi",  voltage:"225kV", length:180, towers:228, drones:"Scheduled", status:"Operational",       lastInspection:"2025-11-10" },
-  { id:"TL-03", name:"Kumasi – Sunyani",    voltage:"161kV", length:145, towers:184, drones:"Pending",   status:"Operational",       lastInspection:"2025-08-15" },
-  { id:"TL-04", name:"Bolgatanga – Tamale", voltage:"161kV", length:220, towers:278, drones:"Pending",   status:"Under Maintenance", lastInspection:"2025-09-22" },
-  { id:"TL-05", name:"Accra – Tema",        voltage:"161kV", length:30,  towers:38,  drones:"Pending",   status:"Operational",       lastInspection:"2026-01-08" },
+  { id:"TL-01", name:"Akosombo – Achimota",  voltage:"161kV", length:105, towers:132, drones:"Active",    status:"Operational",       lastInspection:"2026-05-20" },
+  { id:"TL-02", name:"Prestea – Takoradi",   voltage:"161kV", length:68,  towers:86,  drones:"Scheduled", status:"Operational",       lastInspection:"2025-11-10" },
+  { id:"TL-03", name:"Kumasi – Sunyani",     voltage:"161kV", length:110, towers:139, drones:"Pending",   status:"Operational",       lastInspection:"2025-08-15" },
+  { id:"TL-04", name:"Tamale – Bolgatanga",  voltage:"161kV", length:175, towers:221, drones:"Pending",   status:"Under Maintenance", lastInspection:"2025-09-22" },
+  { id:"TL-05", name:"Achimota – Tema",      voltage:"161kV", length:28,  towers:35,  drones:"Pending",   status:"Operational",       lastInspection:"2026-01-08" },
+  { id:"TL-06", name:"Kumasi – Takoradi",    voltage:"161kV", length:218, towers:275, drones:"Pending",   status:"Operational",       lastInspection:"2025-12-14" },
+  { id:"TL-07", name:"Accra – Akosombo",     voltage:"161kV", length:102, towers:129, drones:"Scheduled", status:"Operational",       lastInspection:"2026-03-22" },
 ];
 
 function GISTransmissionPage({ dark, toast }) {
@@ -5497,9 +5504,9 @@ function GISTransmissionPage({ dark, toast }) {
   const handleDeleteSingle = (id) => { setRows(r=>r.filter(x=>x.id!==id)); toast("Corridor deleted","error"); };
 
   const stats = [
-    { label:"Total Line Length",  value:"6,700+ km", icon:Activity,      color:T.sky     },
-    { label:"Pilot Coverage",     value:"250 km",    icon:CheckCircle,   color:T.emerald },
-    { label:"Towers Registered",  value:"1,040",     icon:Zap,           color:T.amber   },
+    { label:"Total Line Length",  value:"4,500+ km", icon:Activity,      color:T.sky     },
+    { label:"Pilot Coverage",     value:"806 km",    icon:CheckCircle,   color:T.emerald },
+    { label:"Towers Registered",  value:"1,017",     icon:Zap,           color:T.amber   },
     { label:"ROW Encroachments",  value:"14",        icon:AlertTriangle, color:T.rose    },
   ];
   return (
@@ -5508,9 +5515,14 @@ function GISTransmissionPage({ dark, toast }) {
         title="Delete corridors" danger
         body={`Permanently delete ${selected.size} selected corridor${selected.size>1?"s":""}? This cannot be undone.`}
         onConfirm={handleDelete}/>
-      <div style={{ marginBottom:24 }}>
-        <div style={{ fontSize:22, fontWeight:800, color:th.text }}>GIS — Transmission Line & Land Management</div>
-        <div style={{ fontSize:13, color:th.textMid, marginTop:4 }}>Geospatial management of corridors, ROW, and landed assets · Pilot: 250km across 4 corridors</div>
+      <div style={{ display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:24,flexWrap:"wrap",gap:12 }}>
+        <div>
+          <div style={{ fontSize:22, fontWeight:800, color:th.text }}>GIS — Transmission Line & Land Management</div>
+          <div style={{ fontSize:13, color:th.textMid, marginTop:4 }}>Geospatial management of corridors, ROW, and landed assets · 7 key corridors</div>
+        </div>
+        <ExportBtns dark={dark} title="Transmission Corridors" subtitle="GRIDCo national grid transmission corridor register" filename="GRIDCo_Corridors"
+          columns={[{label:"ID",key:"id"},{label:"Corridor",key:"name"},{label:"Voltage",key:"voltage"},{label:"Length (km)",key:"length"},{label:"Towers",key:"towers"},{label:"Drone",key:"drones"},{label:"Status",key:"status"},{label:"Last Inspection",key:"lastInspection"}]}
+          rows={rows}/>
       </div>
       <div className="rg-4" style={{ marginBottom:24 }}>
         {stats.map((s,i)=>{ const Ic=s.icon; return (
@@ -5706,7 +5718,12 @@ function UAVOperationsPage({ dark, toast }) {
           <div style={{ fontSize:22, fontWeight:800, color:th.text }}>UAV Flight Request & Documentation</div>
           <div style={{ fontSize:13, color:th.textMid, marginTop:4 }}>GCAA-compliant UAV operations, fleet management, and drone inspection data integration</div>
         </div>
-        <button style={{ fontSize:13,color:"#fff",background:T.sky,border:"none",borderRadius:10,padding:"9px 18px",cursor:"pointer",fontWeight:700 }}>+ New Flight Request</button>
+        <div style={{ display:"flex",gap:8,flexWrap:"wrap" }}>
+          <ExportBtns dark={dark} title="UAV Flight Log" subtitle="GRIDCo GCAA-approved UAV operations — 2026" filename="GRIDCo_UAV_Flights"
+            columns={[{label:"Flight ID",key:"id"},{label:"Corridor",key:"corridor"},{label:"Pilot",key:"pilot"},{label:"Date",key:"date"},{label:"Duration",key:"duration"},{label:"Findings",key:"findings"},{label:"Status",key:"status"}]}
+            rows={flightRows}/>
+          <button style={{ fontSize:13,color:"#fff",background:T.sky,border:"none",borderRadius:10,padding:"9px 18px",cursor:"pointer",fontWeight:700 }}>+ New Flight Request</button>
+        </div>
       </div>
       <div className="rg-4" style={{ marginBottom:24 }}>
         {stats.map((s,i)=>{ const Ic=s.icon; return (
@@ -5875,7 +5892,10 @@ function ToolsEquipmentPage({ dark, toast }) {
           <div style={{ fontSize:22, fontWeight:800, color:th.text }}>Tools & Test Equipment Management</div>
           <div style={{ fontSize:13, color:th.textMid, marginTop:4 }}>Track, allocate, and calibrate maintenance tools and test equipment across all operational areas</div>
         </div>
-        <div style={{ display:"flex",gap:8 }}>
+        <div style={{ display:"flex",gap:8,flexWrap:"wrap" }}>
+          <ExportBtns dark={dark} title="Tools & Test Equipment Register" subtitle="GRIDCo maintenance tools and calibration schedule" filename="GRIDCo_Equipment"
+            columns={[{label:"ID",key:"id"},{label:"Equipment Name",key:"name"},{label:"Department",key:"dept"},{label:"Area",key:"area"},{label:"Status",key:"status"},{label:"Last Used",key:"lastUsed"},{label:"Calibration Due",key:"calibDue"}]}
+            rows={rows}/>
           <button style={{ fontSize:12,color:th.textMid,background:"none",border:`1px solid ${th.border}`,borderRadius:9,padding:"8px 14px",cursor:"pointer",fontWeight:600 }}>Request Equipment</button>
           <button style={{ fontSize:13,color:"#fff",background:T.sky,border:"none",borderRadius:10,padding:"9px 18px",cursor:"pointer",fontWeight:700 }}>+ Register Equipment</button>
         </div>
@@ -6005,7 +6025,12 @@ function EngineeringProjectsPage({ dark, toast }) {
           <div style={{ fontSize:22, fontWeight:800, color:th.text }}>Engineering Design & Project Management</div>
           <div style={{ fontSize:13, color:th.textMid, marginTop:4 }}>D365 Project Operations — WBS structures, design reviews, financials, and procurement integration</div>
         </div>
-        <button style={{ fontSize:13,color:"#fff",background:T.sky,border:"none",borderRadius:10,padding:"9px 18px",cursor:"pointer",fontWeight:700 }}>+ New Project</button>
+        <div style={{ display:"flex",gap:8,flexWrap:"wrap" }}>
+          <ExportBtns dark={dark} title="Engineering Projects" subtitle="GRIDCo active capital and design projects" filename="GRIDCo_EngineeringProjects"
+            columns={[{label:"ID",key:"id"},{label:"Project",key:"name"},{label:"Phase",key:"phase"},{label:"Manager",key:"manager"},{label:"Budget (GHS)",key:"budget"},{label:"Spent (GHS)",key:"spent"},{label:"Status",key:"status"}]}
+            rows={rows}/>
+          <button style={{ fontSize:13,color:"#fff",background:T.sky,border:"none",borderRadius:10,padding:"9px 18px",cursor:"pointer",fontWeight:700 }}>+ New Project</button>
+        </div>
       </div>
       <div className="rg-4" style={{ marginBottom:24 }}>
         {stats.map((s,i)=>{ const Ic=s.icon; return (
@@ -6152,7 +6177,12 @@ function RiskManagementPage({ dark, toast }) {
           <div style={{ fontSize:22, fontWeight:800, color:th.text }}>Risk Management</div>
           <div style={{ fontSize:13, color:th.textMid, marginTop:4 }}>ISO 55000-aligned risk framework — asset, operational, project, and safety risks</div>
         </div>
-        <button style={{ fontSize:13,color:"#fff",background:T.rose,border:"none",borderRadius:10,padding:"9px 18px",cursor:"pointer",fontWeight:700 }}>+ Log Risk</button>
+        <div style={{ display:"flex",gap:8,flexWrap:"wrap" }}>
+          <ExportBtns dark={dark} title="Risk Register" subtitle="GRIDCo ISO 55000 risk register — Likelihood × Consequence" filename="GRIDCo_RiskRegister"
+            columns={[{label:"ID",key:"id"},{label:"Asset / Area",key:"asset"},{label:"Category",key:"category"},{label:"Likelihood",key:"likelihood"},{label:"Consequence",key:"consequence"},{label:"Level",key:"level"},{label:"Owner",key:"owner"},{label:"Status",key:"status"},{label:"Mitigation",key:"mitigation"}]}
+            rows={rows}/>
+          <button style={{ fontSize:13,color:"#fff",background:T.rose,border:"none",borderRadius:10,padding:"9px 18px",cursor:"pointer",fontWeight:700 }}>+ Log Risk</button>
+        </div>
       </div>
       <div className="rg-4" style={{ marginBottom:24 }}>
         {stats.map((s,i)=>{ const Ic=s.icon; return (
@@ -6332,10 +6362,14 @@ function IoTSCADAPage({ dark, toast }) {
           <div style={{ fontSize:22, fontWeight:800, color:th.text }}>IoT & Real-Time Data Integration</div>
           <div style={{ fontSize:13, color:th.textMid, marginTop:4 }}>Live SCADA, IED, and sensor data integrated into D365 asset condition monitoring</div>
         </div>
-        <div style={{ display:"flex",alignItems:"center",gap:8,padding:"7px 14px",borderRadius:20,
-          background:"rgba(16,185,129,0.1)",border:"1px solid rgba(16,185,129,0.2)" }}>
-          <div style={{ width:7,height:7,borderRadius:"50%",background:T.emerald,animation:"pulse-ring 2s ease-out infinite" }}/>
-          <span style={{ fontSize:12,color:T.emerald,fontWeight:700 }}>SCADA Live</span>
+        <div style={{ display:"flex",alignItems:"center",gap:8,flexWrap:"wrap" }}>
+          <ExportBtns dark={dark} title="IoT & SCADA Device Register" subtitle="GRIDCo connected devices — live feed snapshot" filename="GRIDCo_IoT_SCADA"
+            columns={[{label:"ID",key:"id"},{label:"Device / Monitor",key:"name"},{label:"Type",key:"type"},{label:"Substation",key:"substation"},{label:"Status",key:"status"},{label:"Last Reading",key:"last"},{label:"Live Value",key:"value"},{label:"Threshold",key:"threshold"}]}
+            rows={rows}/>
+          <div style={{ display:"flex",alignItems:"center",gap:6,padding:"7px 14px",borderRadius:20,background:"rgba(16,185,129,0.1)",border:"1px solid rgba(16,185,129,0.2)" }}>
+            <div style={{ width:7,height:7,borderRadius:"50%",background:T.emerald,animation:"pulse-ring 2s ease-out infinite" }}/>
+            <span style={{ fontSize:12,color:T.emerald,fontWeight:700 }}>SCADA Live</span>
+          </div>
         </div>
       </div>
       <div className="rg-4" style={{ marginBottom:24 }}>
