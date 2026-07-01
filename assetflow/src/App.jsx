@@ -5206,7 +5206,36 @@ const substationSLDs = [
 
 function SubstationSLDPage({ dark, toast }) {
   const th = useTheme(dark);
-  const [selected, setSelected] = useState(substationSLDs[0]);
+  const [rows, setRows] = useState(substationSLDs);
+  const [search, setSearch] = useState("");
+  const [selected, setSelected] = useState(new Set());
+  const [activeSLD, setActiveSLD] = useState(substationSLDs[0]);
+  const [showDelete, setShowDelete] = useState(false);
+
+  const filtered = rows.filter(r =>
+    r.name.toLowerCase().includes(search.toLowerCase()) ||
+    r.id.toLowerCase().includes(search.toLowerCase()) ||
+    r.area.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const toggleSelect = (id) => setSelected(s => {
+    const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n;
+  });
+
+  const handleDelete = () => {
+    setRows(r => r.filter(x => !selected.has(x.id)));
+    if (activeSLD && selected.has(activeSLD.id)) setActiveSLD(rows.find(r => !selected.has(r.id)) || null);
+    toast(`${selected.size} substation${selected.size > 1 ? "s" : ""} deleted`, "error");
+    setSelected(new Set());
+    setShowDelete(false);
+  };
+
+  const handleDeleteSingle = (id) => {
+    setRows(r => r.filter(x => x.id !== id));
+    if (activeSLD?.id === id) setActiveSLD(rows.find(r => r.id !== id) || null);
+    toast("Substation deleted", "error");
+  };
+
   const sldStats = [
     { label:"Total Substations", value:"60+",  icon:Building2,   color:T.sky     },
     { label:"SLDs Digitized",    value:"5",    icon:CheckCircle, color:T.emerald },
@@ -5220,9 +5249,13 @@ function SubstationSLDPage({ dark, toast }) {
     "SS-04":{ tr:6, cb:18, dc:12, pr:28 },
     "SS-05":{ tr:4, cb:11, dc:8,  pr:17 },
   };
-  const eq = eqMap[selected?.id];
+  const eq = eqMap[activeSLD?.id];
   return (
     <div className="page-content" style={{ background:th.bg, minHeight:"100vh", padding:"28px 32px 40px" }}>
+      <ConfirmModal open={showDelete} onClose={()=>setShowDelete(false)} dark={dark}
+        title="Delete substations" danger
+        body={`Permanently delete ${selected.size} selected substation${selected.size>1?"s":""}? This cannot be undone.`}
+        onConfirm={handleDelete}/>
       <div style={{ marginBottom:24 }}>
         <div style={{ fontSize:22, fontWeight:800, color:th.text }}>Substation Single Line Diagrams</div>
         <div style={{ fontSize:13, color:th.textMid, marginTop:4 }}>Interactive SLD interface linked to D365 asset database — Pilot: 5 substations</div>
@@ -5240,26 +5273,47 @@ function SubstationSLDPage({ dark, toast }) {
           </div>
         );})}
       </div>
+      {selected.size>0&&(
+        <div style={{ display:"flex",alignItems:"center",gap:10,padding:"10px 16px",background:`${T.rose}10`,border:`1px solid ${T.rose}30`,borderRadius:10,marginBottom:16 }}>
+          <span style={{ fontSize:13,color:T.rose,fontWeight:700 }}>{selected.size} selected</span>
+          <button onClick={()=>setShowDelete(true)} style={{ fontSize:12,color:"#fff",background:T.rose,border:"none",borderRadius:7,padding:"5px 12px",cursor:"pointer",fontWeight:600 }}>Delete</button>
+          <button onClick={()=>setSelected(new Set())} style={{ fontSize:12,color:th.textMid,background:"none",border:`1px solid ${th.border}`,borderRadius:7,padding:"5px 10px",cursor:"pointer" }}>Clear</button>
+        </div>
+      )}
       <div className="rg-2" style={{ marginBottom:20 }}>
         {/* List */}
         <div style={{ background:th.card,borderRadius:14,border:`1px solid ${th.border}`,overflow:"hidden" }}>
-          <div style={{ padding:"16px 20px",borderBottom:`1px solid ${th.border}`,display:"flex",justifyContent:"space-between",alignItems:"center" }}>
+          <div style={{ padding:"16px 20px",borderBottom:`1px solid ${th.border}`,display:"flex",justifyContent:"space-between",alignItems:"center",gap:12,flexWrap:"wrap" }}>
             <div>
               <div style={{ fontSize:14,fontWeight:700,color:th.text }}>Substation Register</div>
               <div style={{ fontSize:12,color:th.textMid }}>Click a row to preview SLD</div>
             </div>
-            <button style={{ fontSize:12,color:T.sky,background:"none",border:`1px solid ${T.sky}40`,borderRadius:8,padding:"5px 12px",cursor:"pointer",fontWeight:600 }}>+ Add Substation</button>
+            <div style={{ display:"flex",alignItems:"center",gap:8 }}>
+              <div style={{ display:"flex",alignItems:"center",gap:6,background:th.bg1,border:`1px solid ${th.border}`,borderRadius:8,padding:"5px 10px" }}>
+                <Search size={12} color={th.textLo}/>
+                <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search…" style={{ border:"none",background:"transparent",fontSize:12,color:th.text,width:130,outline:"none" }}/>
+              </div>
+              <button style={{ fontSize:12,color:T.sky,background:"none",border:`1px solid ${T.sky}40`,borderRadius:8,padding:"5px 12px",cursor:"pointer",fontWeight:600 }}>+ Add Substation</button>
+            </div>
           </div>
           <div style={{ overflowX:"auto" }}>
             <table style={{ width:"100%",borderCollapse:"collapse" }}>
               <thead><tr style={{ borderBottom:`1px solid ${th.border}` }}>
-                {["ID","Name","Area","Voltage","Equipment","SLD Status","Linked"].map(h=>(
+                <th style={{ padding:"10px 14px",width:36 }}>
+                  <input type="checkbox" checked={filtered.length>0&&filtered.every(r=>selected.has(r.id))}
+                    onChange={()=>{ const allSel=filtered.every(r=>selected.has(r.id)); setSelected(allSel?new Set():new Set(filtered.map(r=>r.id))); }}
+                    style={{ accentColor:T.sky,cursor:"pointer" }}/>
+                </th>
+                {["ID","Name","Area","Voltage","Equipment","SLD Status","Linked",""].map(h=>(
                   <th key={h} style={{ padding:"10px 14px",textAlign:"left",fontSize:10,fontWeight:700,color:th.textLo,textTransform:"uppercase",letterSpacing:0.8,whiteSpace:"nowrap" }}>{h}</th>
                 ))}
               </tr></thead>
               <tbody>
-                {substationSLDs.map(s=>(
-                  <tr key={s.id} className="row-hover" onClick={()=>setSelected(s)} style={{ borderBottom:`1px solid ${th.borderLo}`,cursor:"pointer",background:selected?.id===s.id?`${T.sky}08`:"transparent" }}>
+                {filtered.map(s=>(
+                  <tr key={s.id} className="row-hover" onClick={()=>setActiveSLD(s)} style={{ borderBottom:`1px solid ${th.borderLo}`,cursor:"pointer",background:activeSLD?.id===s.id?`${T.sky}08`:"transparent" }}>
+                    <td style={{ padding:"10px 14px" }} onClick={e=>e.stopPropagation()}>
+                      <input type="checkbox" checked={selected.has(s.id)} onChange={()=>toggleSelect(s.id)} style={{ accentColor:T.sky,cursor:"pointer" }}/>
+                    </td>
                     <td style={{ padding:"10px 14px",fontSize:11,fontFamily:"'JetBrains Mono',monospace",color:T.sky }}>{s.id}</td>
                     <td style={{ padding:"10px 14px",fontSize:13,fontWeight:600,color:th.text }}>{s.name}</td>
                     <td style={{ padding:"10px 14px",fontSize:12,color:th.textMid }}>{s.area}</td>
@@ -5271,6 +5325,13 @@ function SubstationSLDPage({ dark, toast }) {
                         color:s.sldStatus==="Digitized"?T.emerald:T.amber }}>{s.sldStatus}</span>
                     </td>
                     <td style={{ padding:"10px 14px",fontSize:12,color:th.textMid }}>{s.linked}/{s.equipment}</td>
+                    <td style={{ padding:"10px 10px" }} onClick={e=>e.stopPropagation()}>
+                      <button onClick={()=>handleDeleteSingle(s.id)} style={{ width:28,height:28,borderRadius:6,border:`1px solid ${th.border}`,background:"transparent",cursor:"pointer",color:T.rose+"88",display:"flex",alignItems:"center",justifyContent:"center" }}
+                        onMouseEnter={e=>{e.currentTarget.style.borderColor=T.rose;e.currentTarget.style.color=T.rose;}}
+                        onMouseLeave={e=>{e.currentTarget.style.borderColor=th.border;e.currentTarget.style.color=T.rose+"88";}}>
+                        <Trash2 size={12}/>
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -5281,8 +5342,8 @@ function SubstationSLDPage({ dark, toast }) {
         <div style={{ background:th.card,borderRadius:14,border:`1px solid ${th.border}`,overflow:"hidden" }}>
           <div style={{ padding:"16px 20px",borderBottom:`1px solid ${th.border}`,display:"flex",justifyContent:"space-between",alignItems:"center" }}>
             <div>
-              <div style={{ fontSize:14,fontWeight:700,color:th.text }}>SLD Preview — {selected?.name}</div>
-              <div style={{ fontSize:12,color:th.textMid }}>{selected?.voltage} · {selected?.area}</div>
+              <div style={{ fontSize:14,fontWeight:700,color:th.text }}>SLD Preview — {activeSLD?.name}</div>
+              <div style={{ fontSize:12,color:th.textMid }}>{activeSLD?.voltage} · {activeSLD?.area}</div>
             </div>
             <div style={{ display:"flex",gap:8 }}>
               <button style={{ fontSize:11,color:th.textMid,background:"none",border:`1px solid ${th.border}`,borderRadius:7,padding:"4px 10px",cursor:"pointer" }}>Export SVG</button>
@@ -5290,7 +5351,7 @@ function SubstationSLDPage({ dark, toast }) {
             </div>
           </div>
           <div style={{ height:300,position:"relative",overflow:"hidden",padding:20 }}>
-            {selected?.sldStatus==="Digitized" ? (
+            {activeSLD?.sldStatus==="Digitized" ? (
               <svg width="100%" height="100%" viewBox="0 0 500 260">
                 <line x1="50" y1="55"  x2="450" y2="55"  stroke={T.sky}     strokeWidth="4" strokeLinecap="round"/>
                 <line x1="50" y1="190" x2="450" y2="190" stroke={T.emerald} strokeWidth="4" strokeLinecap="round"/>
@@ -5356,6 +5417,28 @@ const transmissionCorridors = [
 
 function GISTransmissionPage({ dark, toast }) {
   const th = useTheme(dark);
+  const [rows, setRows] = useState(transmissionCorridors);
+  const [search, setSearch] = useState("");
+  const [selected, setSelected] = useState(new Set());
+  const [showDelete, setShowDelete] = useState(false);
+
+  const filtered = rows.filter(r =>
+    r.name.toLowerCase().includes(search.toLowerCase()) ||
+    r.id.toLowerCase().includes(search.toLowerCase()) ||
+    r.voltage.toLowerCase().includes(search.toLowerCase()) ||
+    r.status.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const toggleSelect = (id) => setSelected(s => { const n=new Set(s); n.has(id)?n.delete(id):n.add(id); return n; });
+
+  const handleDelete = () => {
+    setRows(r => r.filter(x => !selected.has(x.id)));
+    toast(`${selected.size} corridor${selected.size>1?"s":""} deleted`,"error");
+    setSelected(new Set()); setShowDelete(false);
+  };
+
+  const handleDeleteSingle = (id) => { setRows(r=>r.filter(x=>x.id!==id)); toast("Corridor deleted","error"); };
+
   const stats = [
     { label:"Total Line Length",  value:"6,700+ km", icon:Activity,      color:T.sky     },
     { label:"Pilot Coverage",     value:"250 km",    icon:CheckCircle,   color:T.emerald },
@@ -5364,6 +5447,10 @@ function GISTransmissionPage({ dark, toast }) {
   ];
   return (
     <div className="page-content" style={{ background:th.bg, minHeight:"100vh", padding:"28px 32px 40px" }}>
+      <ConfirmModal open={showDelete} onClose={()=>setShowDelete(false)} dark={dark}
+        title="Delete corridors" danger
+        body={`Permanently delete ${selected.size} selected corridor${selected.size>1?"s":""}? This cannot be undone.`}
+        onConfirm={handleDelete}/>
       <div style={{ marginBottom:24 }}>
         <div style={{ fontSize:22, fontWeight:800, color:th.text }}>GIS — Transmission Line & Land Management</div>
         <div style={{ fontSize:13, color:th.textMid, marginTop:4 }}>Geospatial management of corridors, ROW, and landed assets · Pilot: 250km across 4 corridors</div>
@@ -5439,20 +5526,39 @@ function GISTransmissionPage({ dark, toast }) {
         </div>
         {/* Corridor table */}
         <div style={{ background:th.card,borderRadius:14,border:`1px solid ${th.border}`,overflow:"hidden" }}>
-          <div style={{ padding:"16px 20px",borderBottom:`1px solid ${th.border}` }}>
-            <div style={{ fontSize:14,fontWeight:700,color:th.text }}>Transmission Corridors</div>
-            <div style={{ fontSize:12,color:th.textMid }}>GRIDCo national grid — {transmissionCorridors.length} key corridors</div>
+          <div style={{ padding:"16px 20px",borderBottom:`1px solid ${th.border}`,display:"flex",justifyContent:"space-between",alignItems:"center",gap:12,flexWrap:"wrap" }}>
+            <div>
+              <div style={{ fontSize:14,fontWeight:700,color:th.text }}>Transmission Corridors</div>
+              <div style={{ fontSize:12,color:th.textMid }}>GRIDCo national grid — {rows.length} key corridors</div>
+            </div>
+            <div style={{ display:"flex",alignItems:"center",gap:8 }}>
+              <div style={{ display:"flex",alignItems:"center",gap:6,background:th.bg1,border:`1px solid ${th.border}`,borderRadius:8,padding:"5px 10px" }}>
+                <Search size={12} color={th.textLo}/>
+                <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search…" style={{ border:"none",background:"transparent",fontSize:12,color:th.text,width:120,outline:"none" }}/>
+              </div>
+              {selected.size>0&&(
+                <button onClick={()=>setShowDelete(true)} style={{ fontSize:12,color:"#fff",background:T.rose,border:"none",borderRadius:7,padding:"5px 12px",cursor:"pointer",fontWeight:600 }}>Delete ({selected.size})</button>
+              )}
+            </div>
           </div>
           <div style={{ overflowX:"auto" }}>
             <table style={{ width:"100%",borderCollapse:"collapse" }}>
               <thead><tr style={{ borderBottom:`1px solid ${th.border}` }}>
-                {["ID","Corridor","Voltage","Length","Towers","Drone","Status"].map(h=>(
+                <th style={{ padding:"9px 14px",width:36 }}>
+                  <input type="checkbox" checked={filtered.length>0&&filtered.every(r=>selected.has(r.id))}
+                    onChange={()=>{ const allSel=filtered.every(r=>selected.has(r.id)); setSelected(allSel?new Set():new Set(filtered.map(r=>r.id))); }}
+                    style={{ accentColor:T.sky,cursor:"pointer" }}/>
+                </th>
+                {["ID","Corridor","Voltage","Length","Towers","Drone","Status",""].map(h=>(
                   <th key={h} style={{ padding:"9px 14px",textAlign:"left",fontSize:10,fontWeight:700,color:th.textLo,textTransform:"uppercase",letterSpacing:0.7 }}>{h}</th>
                 ))}
               </tr></thead>
               <tbody>
-                {transmissionCorridors.map(t=>(
+                {filtered.map(t=>(
                   <tr key={t.id} className="row-hover" style={{ borderBottom:`1px solid ${th.borderLo}` }}>
+                    <td style={{ padding:"9px 14px" }}>
+                      <input type="checkbox" checked={selected.has(t.id)} onChange={()=>toggleSelect(t.id)} style={{ accentColor:T.sky,cursor:"pointer" }}/>
+                    </td>
                     <td style={{ padding:"10px 14px",fontSize:11,fontFamily:"'JetBrains Mono',monospace",color:T.sky }}>{t.id}</td>
                     <td style={{ padding:"10px 14px",fontSize:12,fontWeight:600,color:th.text }}>{t.name}</td>
                     <td style={{ padding:"10px 14px",fontSize:11,fontFamily:"'JetBrains Mono',monospace",color:T.amber }}>{t.voltage}</td>
@@ -5467,6 +5573,13 @@ function GISTransmissionPage({ dark, toast }) {
                       <span style={{ fontSize:10,fontWeight:700,padding:"2px 7px",borderRadius:4,
                         background:t.status==="Operational"?`${T.emerald}18`:`${T.amber}18`,
                         color:t.status==="Operational"?T.emerald:T.amber }}>{t.status}</span>
+                    </td>
+                    <td style={{ padding:"10px 10px" }}>
+                      <button onClick={()=>handleDeleteSingle(t.id)} style={{ width:28,height:28,borderRadius:6,border:`1px solid ${th.border}`,background:"transparent",cursor:"pointer",color:T.rose+"88",display:"flex",alignItems:"center",justifyContent:"center" }}
+                        onMouseEnter={e=>{e.currentTarget.style.borderColor=T.rose;e.currentTarget.style.color=T.rose;}}
+                        onMouseLeave={e=>{e.currentTarget.style.borderColor=th.border;e.currentTarget.style.color=T.rose+"88";}}>
+                        <Trash2 size={12}/>
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -5494,14 +5607,43 @@ const uavFleet = [
 
 function UAVOperationsPage({ dark, toast }) {
   const th = useTheme(dark);
+  const [flightRows, setFlightRows] = useState(uavFlights);
+  const [fleetRows, setFleetRows] = useState(uavFleet);
+  const [search, setSearch] = useState("");
+  const [selected, setSelected] = useState(new Set());
+  const [showDelete, setShowDelete] = useState(false);
+
+  const filtered = flightRows.filter(r =>
+    r.corridor.toLowerCase().includes(search.toLowerCase()) ||
+    r.pilot.toLowerCase().includes(search.toLowerCase()) ||
+    r.id.toLowerCase().includes(search.toLowerCase()) ||
+    r.status.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const toggleSelect = (id) => setSelected(s => { const n=new Set(s); n.has(id)?n.delete(id):n.add(id); return n; });
+
+  const handleDelete = () => {
+    setFlightRows(r => r.filter(x => !selected.has(x.id)));
+    toast(`${selected.size} flight${selected.size>1?"s":""} deleted`,"error");
+    setSelected(new Set()); setShowDelete(false);
+  };
+
+  const handleDeleteSingle = (id) => { setFlightRows(r=>r.filter(x=>x.id!==id)); toast("Flight deleted","error"); };
+
+  const handleDeleteFleet = (id) => { setFleetRows(r=>r.filter(x=>x.id!==id)); toast("UAV removed from fleet","error"); };
+
   const stats = [
-    { label:"UAV Fleet",           value:"3",    icon:Plane,         color:T.sky     },
-    { label:"Flights This Quarter",value:"6",    icon:CheckCircle,   color:T.emerald },
-    { label:"GCAA Compliance",     value:"100%", icon:Shield,        color:T.violet  },
-    { label:"Defects Found",       value:"4",    icon:AlertTriangle, color:T.amber   },
+    { label:"UAV Fleet",           value:fleetRows.length.toString(), icon:Plane,         color:T.sky     },
+    { label:"Flights This Quarter",value:flightRows.length.toString(),icon:CheckCircle,   color:T.emerald },
+    { label:"GCAA Compliance",     value:"100%",                      icon:Shield,        color:T.violet  },
+    { label:"Defects Found",       value:"4",                         icon:AlertTriangle, color:T.amber   },
   ];
   return (
     <div className="page-content" style={{ background:th.bg, minHeight:"100vh", padding:"28px 32px 40px" }}>
+      <ConfirmModal open={showDelete} onClose={()=>setShowDelete(false)} dark={dark}
+        title="Delete flights" danger
+        body={`Permanently delete ${selected.size} selected flight${selected.size>1?"s":""}? This cannot be undone.`}
+        onConfirm={handleDelete}/>
       <div style={{ display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:24 }}>
         <div>
           <div style={{ fontSize:22, fontWeight:800, color:th.text }}>UAV Flight Request & Documentation</div>
@@ -5525,20 +5667,39 @@ function UAVOperationsPage({ dark, toast }) {
       <div className="rg-2" style={{ marginBottom:20 }}>
         {/* Flight log */}
         <div style={{ background:th.card,borderRadius:14,border:`1px solid ${th.border}`,overflow:"hidden" }}>
-          <div style={{ padding:"16px 20px",borderBottom:`1px solid ${th.border}` }}>
-            <div style={{ fontSize:14,fontWeight:700,color:th.text }}>Flight Log</div>
-            <div style={{ fontSize:12,color:th.textMid }}>All GCAA-approved flights — 2026</div>
+          <div style={{ padding:"16px 20px",borderBottom:`1px solid ${th.border}`,display:"flex",justifyContent:"space-between",alignItems:"center",gap:12,flexWrap:"wrap" }}>
+            <div>
+              <div style={{ fontSize:14,fontWeight:700,color:th.text }}>Flight Log</div>
+              <div style={{ fontSize:12,color:th.textMid }}>All GCAA-approved flights — 2026</div>
+            </div>
+            <div style={{ display:"flex",alignItems:"center",gap:8 }}>
+              <div style={{ display:"flex",alignItems:"center",gap:6,background:th.bg1,border:`1px solid ${th.border}`,borderRadius:8,padding:"5px 10px" }}>
+                <Search size={12} color={th.textLo}/>
+                <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search flights…" style={{ border:"none",background:"transparent",fontSize:12,color:th.text,width:130,outline:"none" }}/>
+              </div>
+              {selected.size>0&&(
+                <button onClick={()=>setShowDelete(true)} style={{ fontSize:12,color:"#fff",background:T.rose,border:"none",borderRadius:7,padding:"5px 12px",cursor:"pointer",fontWeight:600 }}>Delete ({selected.size})</button>
+              )}
+            </div>
           </div>
           <div style={{ overflowX:"auto" }}>
             <table style={{ width:"100%",borderCollapse:"collapse" }}>
               <thead><tr style={{ borderBottom:`1px solid ${th.border}` }}>
-                {["Flight ID","Corridor","Pilot","Date","Duration","Findings","Status"].map(h=>(
+                <th style={{ padding:"9px 14px",width:36 }}>
+                  <input type="checkbox" checked={filtered.length>0&&filtered.every(r=>selected.has(r.id))}
+                    onChange={()=>{ const allSel=filtered.every(r=>selected.has(r.id)); setSelected(allSel?new Set():new Set(filtered.map(r=>r.id))); }}
+                    style={{ accentColor:T.sky,cursor:"pointer" }}/>
+                </th>
+                {["Flight ID","Corridor","Pilot","Date","Duration","Findings","Status",""].map(h=>(
                   <th key={h} style={{ padding:"9px 14px",textAlign:"left",fontSize:10,fontWeight:700,color:th.textLo,textTransform:"uppercase",letterSpacing:0.7 }}>{h}</th>
                 ))}
               </tr></thead>
               <tbody>
-                {uavFlights.map(f=>(
+                {filtered.map(f=>(
                   <tr key={f.id} className="row-hover" style={{ borderBottom:`1px solid ${th.borderLo}` }}>
+                    <td style={{ padding:"9px 14px" }}>
+                      <input type="checkbox" checked={selected.has(f.id)} onChange={()=>toggleSelect(f.id)} style={{ accentColor:T.sky,cursor:"pointer" }}/>
+                    </td>
                     <td style={{ padding:"10px 14px",fontSize:11,fontFamily:"'JetBrains Mono',monospace",color:T.sky }}>{f.id}</td>
                     <td style={{ padding:"10px 14px",fontSize:12,color:th.text,fontWeight:600,maxWidth:160,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" }}>{f.corridor}</td>
                     <td style={{ padding:"10px 14px",fontSize:12,color:th.textMid }}>{f.pilot}</td>
@@ -5549,6 +5710,13 @@ function UAVOperationsPage({ dark, toast }) {
                       <span style={{ fontSize:10,fontWeight:700,padding:"2px 7px",borderRadius:4,
                         background:f.status==="Completed"?`${T.emerald}18`:f.status==="In Progress"?`${T.sky}18`:`${T.amber}18`,
                         color:f.status==="Completed"?T.emerald:f.status==="In Progress"?T.sky:T.amber }}>{f.status}</span>
+                    </td>
+                    <td style={{ padding:"10px 10px" }}>
+                      <button onClick={()=>handleDeleteSingle(f.id)} style={{ width:28,height:28,borderRadius:6,border:`1px solid ${th.border}`,background:"transparent",cursor:"pointer",color:T.rose+"88",display:"flex",alignItems:"center",justifyContent:"center" }}
+                        onMouseEnter={e=>{e.currentTarget.style.borderColor=T.rose;e.currentTarget.style.color=T.rose;}}
+                        onMouseLeave={e=>{e.currentTarget.style.borderColor=th.border;e.currentTarget.style.color=T.rose+"88";}}>
+                        <Trash2 size={12}/>
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -5562,16 +5730,23 @@ function UAVOperationsPage({ dark, toast }) {
             <div style={{ fontSize:14,fontWeight:700,color:th.text }}>UAV Fleet Register</div>
             <div style={{ fontSize:12,color:th.textMid }}>GCAA-registered drones, insurance, and maintenance tracking</div>
           </div>
-          {uavFleet.map((u,i)=>(
-            <div key={u.id} style={{ padding:"14px 20px",borderBottom:i<uavFleet.length-1?`1px solid ${th.borderLo}`:"none" }}>
+          {fleetRows.map((u,i)=>(
+            <div key={u.id} style={{ padding:"14px 20px",borderBottom:i<fleetRows.length-1?`1px solid ${th.borderLo}`:"none" }}>
               <div style={{ display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8 }}>
                 <div>
                   <div style={{ fontSize:13,fontWeight:700,color:th.text }}>{u.model}</div>
                   <div style={{ fontSize:11,color:th.textLo,fontFamily:"'JetBrains Mono',monospace" }}>{u.serial}</div>
                 </div>
-                <span style={{ fontSize:10,fontWeight:700,padding:"2px 8px",borderRadius:4,
-                  background:u.status==="Active"?`${T.emerald}18`:`${T.amber}18`,
-                  color:u.status==="Active"?T.emerald:T.amber }}>{u.status}</span>
+                <div style={{ display:"flex",alignItems:"center",gap:8 }}>
+                  <span style={{ fontSize:10,fontWeight:700,padding:"2px 8px",borderRadius:4,
+                    background:u.status==="Active"?`${T.emerald}18`:`${T.amber}18`,
+                    color:u.status==="Active"?T.emerald:T.amber }}>{u.status}</span>
+                  <button onClick={()=>handleDeleteFleet(u.id)} style={{ width:26,height:26,borderRadius:6,border:`1px solid ${th.border}`,background:"transparent",cursor:"pointer",color:T.rose+"88",display:"flex",alignItems:"center",justifyContent:"center" }}
+                    onMouseEnter={e=>{e.currentTarget.style.borderColor=T.rose;e.currentTarget.style.color=T.rose;}}
+                    onMouseLeave={e=>{e.currentTarget.style.borderColor=th.border;e.currentTarget.style.color=T.rose+"88";}}>
+                    <Trash2 size={11}/>
+                  </button>
+                </div>
               </div>
               <div style={{ display:"flex",gap:20,flexWrap:"wrap" }}>
                 {[{l:"Total Flights",v:u.flights},{l:"Total Hours",v:u.hours},{l:"Next Maintenance",v:u.nextMaint},{l:"Insurance Expiry",v:u.insurance}].map((d,j)=>(
@@ -5603,14 +5778,41 @@ const toolsData = [
 
 function ToolsEquipmentPage({ dark, toast }) {
   const th = useTheme(dark);
+  const [rows, setRows] = useState(toolsData);
+  const [search, setSearch] = useState("");
+  const [selected, setSelected] = useState(new Set());
+  const [showDelete, setShowDelete] = useState(false);
+
+  const filtered = rows.filter(r =>
+    r.name.toLowerCase().includes(search.toLowerCase()) ||
+    r.id.toLowerCase().includes(search.toLowerCase()) ||
+    r.dept.toLowerCase().includes(search.toLowerCase()) ||
+    r.area.toLowerCase().includes(search.toLowerCase()) ||
+    r.status.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const toggleSelect = (id) => setSelected(s => { const n=new Set(s); n.has(id)?n.delete(id):n.add(id); return n; });
+
+  const handleDelete = () => {
+    setRows(r => r.filter(x => !selected.has(x.id)));
+    toast(`${selected.size} item${selected.size>1?"s":""} deleted`,"error");
+    setSelected(new Set()); setShowDelete(false);
+  };
+
+  const handleDeleteSingle = (id) => { setRows(r=>r.filter(x=>x.id!==id)); toast("Equipment deleted","error"); };
+
   const stats = [
-    { label:"Total Equipment",  value:"47", icon:SlidersHorizontal, color:T.sky     },
-    { label:"Available",        value:"31", icon:CheckCircle,       color:T.emerald },
-    { label:"In Use",           value:"12", icon:Activity,          color:T.amber   },
-    { label:"Calibration Due",  value:"4",  icon:AlertTriangle,     color:T.rose    },
+    { label:"Total Equipment",  value:rows.length.toString(), icon:SlidersHorizontal, color:T.sky     },
+    { label:"Available",        value:rows.filter(r=>r.status==="Available").length.toString(), icon:CheckCircle, color:T.emerald },
+    { label:"In Use",           value:rows.filter(r=>r.status==="In Use").length.toString(),    icon:Activity,    color:T.amber   },
+    { label:"Calibration Due",  value:"4",                    icon:AlertTriangle,     color:T.rose    },
   ];
   return (
     <div className="page-content" style={{ background:th.bg, minHeight:"100vh", padding:"28px 32px 40px" }}>
+      <ConfirmModal open={showDelete} onClose={()=>setShowDelete(false)} dark={dark}
+        title="Delete equipment" danger
+        body={`Permanently delete ${selected.size} selected item${selected.size>1?"s":""}? This cannot be undone.`}
+        onConfirm={handleDelete}/>
       <div style={{ display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:24 }}>
         <div>
           <div style={{ fontSize:22, fontWeight:800, color:th.text }}>Tools & Test Equipment Management</div>
@@ -5634,24 +5836,39 @@ function ToolsEquipmentPage({ dark, toast }) {
           </div>
         );})}
       </div>
+      {selected.size>0&&(
+        <div style={{ display:"flex",alignItems:"center",gap:10,padding:"10px 16px",background:`${T.rose}10`,border:`1px solid ${T.rose}30`,borderRadius:10,marginBottom:16 }}>
+          <span style={{ fontSize:13,color:T.rose,fontWeight:700 }}>{selected.size} selected</span>
+          <button onClick={()=>setShowDelete(true)} style={{ fontSize:12,color:"#fff",background:T.rose,border:"none",borderRadius:7,padding:"5px 12px",cursor:"pointer",fontWeight:600 }}>Delete</button>
+          <button onClick={()=>setSelected(new Set())} style={{ fontSize:12,color:th.textMid,background:"none",border:`1px solid ${th.border}`,borderRadius:7,padding:"5px 10px",cursor:"pointer" }}>Clear</button>
+        </div>
+      )}
       <div style={{ background:th.card,borderRadius:14,border:`1px solid ${th.border}`,overflow:"hidden" }}>
-        <div style={{ padding:"16px 20px",borderBottom:`1px solid ${th.border}`,display:"flex",justifyContent:"space-between",alignItems:"center" }}>
+        <div style={{ padding:"16px 20px",borderBottom:`1px solid ${th.border}`,display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:12 }}>
           <div style={{ fontSize:14,fontWeight:700,color:th.text }}>Equipment Register</div>
           <div style={{ display:"flex",alignItems:"center",gap:8,background:th.bg1,border:`1px solid ${th.border}`,borderRadius:8,padding:"5px 10px" }}>
             <Search size={12} color={th.textLo}/>
-            <input placeholder="Search equipment…" style={{ border:"none",background:"transparent",fontSize:12,color:th.text,width:150 }}/>
+            <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search equipment…" style={{ border:"none",background:"transparent",fontSize:12,color:th.text,width:150,outline:"none" }}/>
           </div>
         </div>
         <div style={{ overflowX:"auto" }}>
           <table style={{ width:"100%",borderCollapse:"collapse" }}>
             <thead><tr style={{ borderBottom:`1px solid ${th.border}` }}>
-              {["ID","Equipment Name","Department","Area","Status","Last Used","Calibration Due"].map(h=>(
+              <th style={{ padding:"9px 16px",width:36 }}>
+                <input type="checkbox" checked={filtered.length>0&&filtered.every(r=>selected.has(r.id))}
+                  onChange={()=>{ const allSel=filtered.every(r=>selected.has(r.id)); setSelected(allSel?new Set():new Set(filtered.map(r=>r.id))); }}
+                  style={{ accentColor:T.sky,cursor:"pointer" }}/>
+              </th>
+              {["ID","Equipment Name","Department","Area","Status","Last Used","Calibration Due",""].map(h=>(
                 <th key={h} style={{ padding:"9px 16px",textAlign:"left",fontSize:10,fontWeight:700,color:th.textLo,textTransform:"uppercase",letterSpacing:0.7,whiteSpace:"nowrap" }}>{h}</th>
               ))}
             </tr></thead>
             <tbody>
-              {toolsData.map(t=>(
+              {filtered.map(t=>(
                 <tr key={t.id} className="row-hover" style={{ borderBottom:`1px solid ${th.borderLo}` }}>
+                  <td style={{ padding:"9px 16px" }}>
+                    <input type="checkbox" checked={selected.has(t.id)} onChange={()=>toggleSelect(t.id)} style={{ accentColor:T.sky,cursor:"pointer" }}/>
+                  </td>
                   <td style={{ padding:"10px 16px",fontSize:11,fontFamily:"'JetBrains Mono',monospace",color:T.sky }}>{t.id}</td>
                   <td style={{ padding:"10px 16px",fontSize:13,fontWeight:600,color:th.text,minWidth:220 }}>{t.name}</td>
                   <td style={{ padding:"10px 16px",fontSize:12,color:th.textMid }}>{t.dept}</td>
@@ -5663,6 +5880,13 @@ function ToolsEquipmentPage({ dark, toast }) {
                   </td>
                   <td style={{ padding:"10px 16px",fontSize:11,fontFamily:"'JetBrains Mono',monospace",color:th.textMid }}>{t.lastUsed}</td>
                   <td style={{ padding:"10px 16px",fontSize:11,fontFamily:"'JetBrains Mono',monospace",color:t.calibDue<"2026-09-01"?T.amber:th.textMid }}>{t.calibDue}</td>
+                  <td style={{ padding:"10px 12px" }}>
+                    <button onClick={()=>handleDeleteSingle(t.id)} style={{ width:28,height:28,borderRadius:6,border:`1px solid ${th.border}`,background:"transparent",cursor:"pointer",color:T.rose+"88",display:"flex",alignItems:"center",justifyContent:"center" }}
+                      onMouseEnter={e=>{e.currentTarget.style.borderColor=T.rose;e.currentTarget.style.color=T.rose;}}
+                      onMouseLeave={e=>{e.currentTarget.style.borderColor=th.border;e.currentTarget.style.color=T.rose+"88";}}>
+                      <Trash2 size={12}/>
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -5684,14 +5908,41 @@ const engineeringProjects = [
 
 function EngineeringProjectsPage({ dark, toast }) {
   const th = useTheme(dark);
+  const [rows, setRows] = useState(engineeringProjects);
+  const [search, setSearch] = useState("");
+  const [selected, setSelected] = useState(new Set());
+  const [showDelete, setShowDelete] = useState(false);
+
+  const filtered = rows.filter(r =>
+    r.name.toLowerCase().includes(search.toLowerCase()) ||
+    r.id.toLowerCase().includes(search.toLowerCase()) ||
+    r.manager.toLowerCase().includes(search.toLowerCase()) ||
+    r.phase.toLowerCase().includes(search.toLowerCase()) ||
+    r.status.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const toggleSelect = (id) => setSelected(s => { const n=new Set(s); n.has(id)?n.delete(id):n.add(id); return n; });
+
+  const handleDelete = () => {
+    setRows(r => r.filter(x => !selected.has(x.id)));
+    toast(`${selected.size} project${selected.size>1?"s":""} deleted`,"error");
+    setSelected(new Set()); setShowDelete(false);
+  };
+
+  const handleDeleteSingle = (id) => { setRows(r=>r.filter(x=>x.id!==id)); toast("Project deleted","error"); };
+
   const stats = [
-    { label:"Active Projects",     value:"5",    icon:Briefcase,   color:T.sky     },
-    { label:"On Track",            value:"4",    icon:CheckCircle, color:T.emerald },
-    { label:"Delayed",             value:"1",    icon:Clock,       color:T.amber   },
-    { label:"Total Budget (GHS)",  value:"GHS 60M+", icon:DollarSign, color:T.violet },
+    { label:"Active Projects",    value:rows.length.toString(),                         icon:Briefcase,  color:T.sky    },
+    { label:"On Track",           value:rows.filter(r=>r.status==="On Track").length.toString(), icon:CheckCircle,color:T.emerald},
+    { label:"Delayed",            value:rows.filter(r=>r.status==="Delayed").length.toString(),  icon:Clock,      color:T.amber  },
+    { label:"Total Budget (GHS)", value:"GHS 60M+",                                    icon:DollarSign, color:T.violet },
   ];
   return (
     <div className="page-content" style={{ background:th.bg, minHeight:"100vh", padding:"28px 32px 40px" }}>
+      <ConfirmModal open={showDelete} onClose={()=>setShowDelete(false)} dark={dark}
+        title="Delete projects" danger
+        body={`Permanently delete ${selected.size} selected project${selected.size>1?"s":""}? This cannot be undone.`}
+        onConfirm={handleDelete}/>
       <div style={{ display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:24 }}>
         <div>
           <div style={{ fontSize:22, fontWeight:800, color:th.text }}>Engineering Design & Project Management</div>
@@ -5712,23 +5963,44 @@ function EngineeringProjectsPage({ dark, toast }) {
           </div>
         );})}
       </div>
+      {selected.size>0&&(
+        <div style={{ display:"flex",alignItems:"center",gap:10,padding:"10px 16px",background:`${T.rose}10`,border:`1px solid ${T.rose}30`,borderRadius:10,marginBottom:16 }}>
+          <span style={{ fontSize:13,color:T.rose,fontWeight:700 }}>{selected.size} selected</span>
+          <button onClick={()=>setShowDelete(true)} style={{ fontSize:12,color:"#fff",background:T.rose,border:"none",borderRadius:7,padding:"5px 12px",cursor:"pointer",fontWeight:600 }}>Delete</button>
+          <button onClick={()=>setSelected(new Set())} style={{ fontSize:12,color:th.textMid,background:"none",border:`1px solid ${th.border}`,borderRadius:7,padding:"5px 10px",cursor:"pointer" }}>Clear</button>
+        </div>
+      )}
       <div style={{ background:th.card,borderRadius:14,border:`1px solid ${th.border}`,overflow:"hidden" }}>
-        <div style={{ padding:"16px 20px",borderBottom:`1px solid ${th.border}` }}>
-          <div style={{ fontSize:14,fontWeight:700,color:th.text }}>Active Engineering Projects</div>
-          <div style={{ fontSize:12,color:th.textMid }}>Integrated with D365 Finance and Supply Chain — budget, WBS, and procurement</div>
+        <div style={{ padding:"16px 20px",borderBottom:`1px solid ${th.border}`,display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:12 }}>
+          <div>
+            <div style={{ fontSize:14,fontWeight:700,color:th.text }}>Active Engineering Projects</div>
+            <div style={{ fontSize:12,color:th.textMid }}>Integrated with D365 Finance and Supply Chain — budget, WBS, and procurement</div>
+          </div>
+          <div style={{ display:"flex",alignItems:"center",gap:6,background:th.bg1,border:`1px solid ${th.border}`,borderRadius:8,padding:"5px 10px" }}>
+            <Search size={12} color={th.textLo}/>
+            <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search projects…" style={{ border:"none",background:"transparent",fontSize:12,color:th.text,width:150,outline:"none" }}/>
+          </div>
         </div>
         <div style={{ overflowX:"auto" }}>
           <table style={{ width:"100%",borderCollapse:"collapse" }}>
             <thead><tr style={{ borderBottom:`1px solid ${th.border}` }}>
-              {["ID","Project","Phase","Manager","Budget","Spent","Progress","Status"].map(h=>(
+              <th style={{ padding:"9px 16px",width:36 }}>
+                <input type="checkbox" checked={filtered.length>0&&filtered.every(r=>selected.has(r.id))}
+                  onChange={()=>{ const allSel=filtered.every(r=>selected.has(r.id)); setSelected(allSel?new Set():new Set(filtered.map(r=>r.id))); }}
+                  style={{ accentColor:T.sky,cursor:"pointer" }}/>
+              </th>
+              {["ID","Project","Phase","Manager","Budget","Spent","Progress","Status",""].map(h=>(
                 <th key={h} style={{ padding:"9px 16px",textAlign:"left",fontSize:10,fontWeight:700,color:th.textLo,textTransform:"uppercase",letterSpacing:0.7,whiteSpace:"nowrap" }}>{h}</th>
               ))}
             </tr></thead>
             <tbody>
-              {engineeringProjects.map(p=>{
+              {filtered.map(p=>{
                 const pct=Math.round((p.spent/p.budget)*100);
                 return (
                   <tr key={p.id} className="row-hover" style={{ borderBottom:`1px solid ${th.borderLo}` }}>
+                    <td style={{ padding:"9px 16px" }}>
+                      <input type="checkbox" checked={selected.has(p.id)} onChange={()=>toggleSelect(p.id)} style={{ accentColor:T.sky,cursor:"pointer" }}/>
+                    </td>
                     <td style={{ padding:"10px 16px",fontSize:11,fontFamily:"'JetBrains Mono',monospace",color:T.sky }}>{p.id}</td>
                     <td style={{ padding:"10px 16px",fontSize:13,fontWeight:600,color:th.text,minWidth:200 }}>{p.name}</td>
                     <td style={{ padding:"10px 16px" }}>
@@ -5749,6 +6021,13 @@ function EngineeringProjectsPage({ dark, toast }) {
                       <span style={{ fontSize:10,fontWeight:700,padding:"2px 8px",borderRadius:4,
                         background:p.status==="On Track"?`${T.emerald}18`:`${T.amber}18`,
                         color:p.status==="On Track"?T.emerald:T.amber }}>{p.status}</span>
+                    </td>
+                    <td style={{ padding:"10px 12px" }}>
+                      <button onClick={()=>handleDeleteSingle(p.id)} style={{ width:28,height:28,borderRadius:6,border:`1px solid ${th.border}`,background:"transparent",cursor:"pointer",color:T.rose+"88",display:"flex",alignItems:"center",justifyContent:"center" }}
+                        onMouseEnter={e=>{e.currentTarget.style.borderColor=T.rose;e.currentTarget.style.color=T.rose;}}
+                        onMouseLeave={e=>{e.currentTarget.style.borderColor=th.border;e.currentTarget.style.color=T.rose+"88";}}>
+                        <Trash2 size={12}/>
+                      </button>
                     </td>
                   </tr>
                 );
@@ -5774,16 +6053,43 @@ const riskRegister = [
 
 function RiskManagementPage({ dark, toast }) {
   const th = useTheme(dark);
+  const [rows, setRows] = useState(riskRegister);
+  const [search, setSearch] = useState("");
+  const [selected, setSelected] = useState(new Set());
+  const [showDelete, setShowDelete] = useState(false);
+
+  const filtered = rows.filter(r =>
+    r.asset.toLowerCase().includes(search.toLowerCase()) ||
+    r.id.toLowerCase().includes(search.toLowerCase()) ||
+    r.category.toLowerCase().includes(search.toLowerCase()) ||
+    r.level.toLowerCase().includes(search.toLowerCase()) ||
+    r.owner.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const toggleSelect = (id) => setSelected(s => { const n=new Set(s); n.has(id)?n.delete(id):n.add(id); return n; });
+
+  const handleDelete = () => {
+    setRows(r => r.filter(x => !selected.has(x.id)));
+    toast(`${selected.size} risk${selected.size>1?"s":""} deleted`,"error");
+    setSelected(new Set()); setShowDelete(false);
+  };
+
+  const handleDeleteSingle = (id) => { setRows(r=>r.filter(x=>x.id!==id)); toast("Risk deleted","error"); };
+
   const lColor = { Critical:T.rose, High:T.amber, Medium:T.sky, Low:T.emerald };
   const lBg    = { Critical:`${T.rose}18`, High:`${T.amber}18`, Medium:`${T.sky}18`, Low:`${T.emerald}18` };
   const stats  = [
-    { label:"Critical", value:"2", icon:AlertOctagon, color:T.rose    },
-    { label:"High",     value:"3", icon:AlertTriangle,color:T.amber   },
-    { label:"Medium",   value:"1", icon:Info,         color:T.sky     },
-    { label:"Low",      value:"1", icon:CheckCircle,  color:T.emerald },
+    { label:"Critical", value:rows.filter(r=>r.level==="Critical").length.toString(), icon:AlertOctagon, color:T.rose    },
+    { label:"High",     value:rows.filter(r=>r.level==="High").length.toString(),     icon:AlertTriangle,color:T.amber   },
+    { label:"Medium",   value:rows.filter(r=>r.level==="Medium").length.toString(),   icon:Info,         color:T.sky     },
+    { label:"Low",      value:rows.filter(r=>r.level==="Low").length.toString(),      icon:CheckCircle,  color:T.emerald },
   ];
   return (
     <div className="page-content" style={{ background:th.bg, minHeight:"100vh", padding:"28px 32px 40px" }}>
+      <ConfirmModal open={showDelete} onClose={()=>setShowDelete(false)} dark={dark}
+        title="Delete risks" danger
+        body={`Permanently delete ${selected.size} selected risk${selected.size>1?"s":""}? This cannot be undone.`}
+        onConfirm={handleDelete}/>
       <div style={{ display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:24 }}>
         <div>
           <div style={{ fontSize:22, fontWeight:800, color:th.text }}>Risk Management</div>
@@ -5804,25 +6110,46 @@ function RiskManagementPage({ dark, toast }) {
           </div>
         );})}
       </div>
+      {selected.size>0&&(
+        <div style={{ display:"flex",alignItems:"center",gap:10,padding:"10px 16px",background:`${T.rose}10`,border:`1px solid ${T.rose}30`,borderRadius:10,marginBottom:16 }}>
+          <span style={{ fontSize:13,color:T.rose,fontWeight:700 }}>{selected.size} selected</span>
+          <button onClick={()=>setShowDelete(true)} style={{ fontSize:12,color:"#fff",background:T.rose,border:"none",borderRadius:7,padding:"5px 12px",cursor:"pointer",fontWeight:600 }}>Delete</button>
+          <button onClick={()=>setSelected(new Set())} style={{ fontSize:12,color:th.textMid,background:"none",border:`1px solid ${th.border}`,borderRadius:7,padding:"5px 10px",cursor:"pointer" }}>Clear</button>
+        </div>
+      )}
       <div className="rg-2c" style={{ marginBottom:20 }}>
         {/* Risk Register table */}
         <div style={{ gridColumn:"1 / -1",background:th.card,borderRadius:14,border:`1px solid ${th.border}`,overflow:"hidden",marginBottom:20 }}>
-          <div style={{ padding:"16px 20px",borderBottom:`1px solid ${th.border}` }}>
-            <div style={{ fontSize:14,fontWeight:700,color:th.text }}>Risk Register</div>
-            <div style={{ fontSize:12,color:th.textMid }}>Likelihood × Consequence scoring (1–5 scale) — ISO 55000 framework</div>
+          <div style={{ padding:"16px 20px",borderBottom:`1px solid ${th.border}`,display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:12 }}>
+            <div>
+              <div style={{ fontSize:14,fontWeight:700,color:th.text }}>Risk Register</div>
+              <div style={{ fontSize:12,color:th.textMid }}>Likelihood × Consequence scoring (1–5 scale) — ISO 55000 framework</div>
+            </div>
+            <div style={{ display:"flex",alignItems:"center",gap:6,background:th.bg1,border:`1px solid ${th.border}`,borderRadius:8,padding:"5px 10px" }}>
+              <Search size={12} color={th.textLo}/>
+              <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search risks…" style={{ border:"none",background:"transparent",fontSize:12,color:th.text,width:140,outline:"none" }}/>
+            </div>
           </div>
           <div style={{ overflowX:"auto" }}>
             <table style={{ width:"100%",borderCollapse:"collapse" }}>
               <thead><tr style={{ borderBottom:`1px solid ${th.border}` }}>
-                {["ID","Asset / Area","Category","L","C","Score","Level","Owner","Status"].map(h=>(
+                <th style={{ padding:"9px 14px",width:36 }}>
+                  <input type="checkbox" checked={filtered.length>0&&filtered.every(r=>selected.has(r.id))}
+                    onChange={()=>{ const allSel=filtered.every(r=>selected.has(r.id)); setSelected(allSel?new Set():new Set(filtered.map(r=>r.id))); }}
+                    style={{ accentColor:T.sky,cursor:"pointer" }}/>
+                </th>
+                {["ID","Asset / Area","Category","L","C","Score","Level","Owner","Status",""].map(h=>(
                   <th key={h} style={{ padding:"9px 14px",textAlign:"left",fontSize:10,fontWeight:700,color:th.textLo,textTransform:"uppercase",letterSpacing:0.7,whiteSpace:"nowrap" }}>{h}</th>
                 ))}
               </tr></thead>
               <tbody>
-                {riskRegister.map(r=>{
+                {filtered.map(r=>{
                   const score=r.likelihood*r.consequence;
                   return (
                     <tr key={r.id} className="row-hover" style={{ borderBottom:`1px solid ${th.borderLo}` }}>
+                      <td style={{ padding:"9px 14px" }}>
+                        <input type="checkbox" checked={selected.has(r.id)} onChange={()=>toggleSelect(r.id)} style={{ accentColor:T.sky,cursor:"pointer" }}/>
+                      </td>
                       <td style={{ padding:"10px 14px",fontSize:11,fontFamily:"'JetBrains Mono',monospace",color:T.sky }}>{r.id}</td>
                       <td style={{ padding:"10px 14px",fontSize:12,fontWeight:600,color:th.text,minWidth:180 }}>{r.asset}</td>
                       <td style={{ padding:"10px 14px",fontSize:12,color:th.textMid }}>{r.category}</td>
@@ -5839,6 +6166,13 @@ function RiskManagementPage({ dark, toast }) {
                         <span style={{ fontSize:10,fontWeight:700,padding:"2px 8px",borderRadius:4,
                           background:r.status==="Escalated"?`${T.rose}18`:r.status==="Mitigating"?`${T.amber}18`:`rgba(100,116,139,0.1)`,
                           color:r.status==="Escalated"?T.rose:r.status==="Mitigating"?T.amber:"#94A3B8" }}>{r.status}</span>
+                      </td>
+                      <td style={{ padding:"10px 10px" }}>
+                        <button onClick={()=>handleDeleteSingle(r.id)} style={{ width:28,height:28,borderRadius:6,border:`1px solid ${th.border}`,background:"transparent",cursor:"pointer",color:T.rose+"88",display:"flex",alignItems:"center",justifyContent:"center" }}
+                          onMouseEnter={e=>{e.currentTarget.style.borderColor=T.rose;e.currentTarget.style.color=T.rose;}}
+                          onMouseLeave={e=>{e.currentTarget.style.borderColor=th.border;e.currentTarget.style.color=T.rose+"88";}}>
+                          <Trash2 size={12}/>
+                        </button>
                       </td>
                     </tr>
                   );
@@ -5901,15 +6235,42 @@ const iotDevices = [
 
 function IoTSCADAPage({ dark, toast }) {
   const th = useTheme(dark);
+  const [rows, setRows] = useState(iotDevices);
+  const [search, setSearch] = useState("");
+  const [selected, setSelected] = useState(new Set());
+  const [showDelete, setShowDelete] = useState(false);
+
+  const filtered = rows.filter(r =>
+    r.name.toLowerCase().includes(search.toLowerCase()) ||
+    r.id.toLowerCase().includes(search.toLowerCase()) ||
+    r.type.toLowerCase().includes(search.toLowerCase()) ||
+    r.substation.toLowerCase().includes(search.toLowerCase()) ||
+    r.status.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const toggleSelect = (id) => setSelected(s => { const n=new Set(s); n.has(id)?n.delete(id):n.add(id); return n; });
+
+  const handleDelete = () => {
+    setRows(r => r.filter(x => !selected.has(x.id)));
+    toast(`${selected.size} device${selected.size>1?"s":""} deleted`,"error");
+    setSelected(new Set()); setShowDelete(false);
+  };
+
+  const handleDeleteSingle = (id) => { setRows(r=>r.filter(x=>x.id!==id)); toast("Device deleted","error"); };
+
   const stats = [
-    { label:"Connected Devices", value:"127", icon:Cpu,          color:T.sky     },
-    { label:"Online",            value:"124", icon:CheckCircle,  color:T.emerald },
-    { label:"Active Alarms",     value:"3",   icon:AlertOctagon, color:T.rose    },
-    { label:"Data Streams/sec",  value:"48",  icon:Activity,     color:T.violet  },
+    { label:"Connected Devices", value:rows.length.toString(),                           icon:Cpu,          color:T.sky     },
+    { label:"Online",            value:rows.filter(r=>r.status==="Online").length.toString(), icon:CheckCircle, color:T.emerald },
+    { label:"Active Alarms",     value:rows.filter(r=>r.status==="Alert").length.toString(),  icon:AlertOctagon,color:T.rose    },
+    { label:"Data Streams/sec",  value:"48",                                             icon:Activity,     color:T.violet  },
   ];
   return (
     <div className="page-content" style={{ background:th.bg, minHeight:"100vh", padding:"28px 32px 40px" }}>
-      <div style={{ display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:24 }}>
+      <ConfirmModal open={showDelete} onClose={()=>setShowDelete(false)} dark={dark}
+        title="Delete devices" danger
+        body={`Permanently delete ${selected.size} selected device${selected.size>1?"s":""}? This cannot be undone.`}
+        onConfirm={handleDelete}/>
+      <div style={{ display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:24,flexWrap:"wrap",gap:16 }}>
         <div>
           <div style={{ fontSize:22, fontWeight:800, color:th.text }}>IoT & Real-Time Data Integration</div>
           <div style={{ fontSize:13, color:th.textMid, marginTop:4 }}>Live SCADA, IED, and sensor data integrated into D365 asset condition monitoring</div>
@@ -5933,24 +6294,45 @@ function IoTSCADAPage({ dark, toast }) {
           </div>
         );})}
       </div>
+      {selected.size>0&&(
+        <div style={{ display:"flex",alignItems:"center",gap:10,padding:"10px 16px",background:`${T.rose}10`,border:`1px solid ${T.rose}30`,borderRadius:10,marginBottom:16 }}>
+          <span style={{ fontSize:13,color:T.rose,fontWeight:700 }}>{selected.size} selected</span>
+          <button onClick={()=>setShowDelete(true)} style={{ fontSize:12,color:"#fff",background:T.rose,border:"none",borderRadius:7,padding:"5px 12px",cursor:"pointer",fontWeight:600 }}>Delete</button>
+          <button onClick={()=>setSelected(new Set())} style={{ fontSize:12,color:th.textMid,background:"none",border:`1px solid ${th.border}`,borderRadius:7,padding:"5px 10px",cursor:"pointer" }}>Clear</button>
+        </div>
+      )}
       <div style={{ background:th.card,borderRadius:14,border:`1px solid ${th.border}`,overflow:"hidden" }}>
-        <div style={{ padding:"16px 20px",borderBottom:`1px solid ${th.border}`,display:"flex",justifyContent:"space-between",alignItems:"center" }}>
+        <div style={{ padding:"16px 20px",borderBottom:`1px solid ${th.border}`,display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:12 }}>
           <div>
             <div style={{ fontSize:14,fontWeight:700,color:th.text }}>Connected Devices — Live Feed</div>
             <div style={{ fontSize:12,color:th.textMid }}>SCADA, IEDs, sensors, smart meters across GRIDCo substations and lines</div>
           </div>
-          <button style={{ fontSize:11,color:T.sky,background:"none",border:`1px solid ${T.sky}40`,borderRadius:7,padding:"5px 12px",cursor:"pointer",fontWeight:600 }}>Configure Alerts</button>
+          <div style={{ display:"flex",alignItems:"center",gap:8 }}>
+            <div style={{ display:"flex",alignItems:"center",gap:6,background:th.bg1,border:`1px solid ${th.border}`,borderRadius:8,padding:"5px 10px" }}>
+              <Search size={12} color={th.textLo}/>
+              <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search devices…" style={{ border:"none",background:"transparent",fontSize:12,color:th.text,width:140,outline:"none" }}/>
+            </div>
+            <button style={{ fontSize:11,color:T.sky,background:"none",border:`1px solid ${T.sky}40`,borderRadius:7,padding:"5px 12px",cursor:"pointer",fontWeight:600 }}>Configure Alerts</button>
+          </div>
         </div>
         <div style={{ overflowX:"auto" }}>
           <table style={{ width:"100%",borderCollapse:"collapse" }}>
             <thead><tr style={{ borderBottom:`1px solid ${th.border}` }}>
-              {["ID","Device / Monitor","Type","Substation","Status","Last Reading","Live Value","Threshold"].map(h=>(
+              <th style={{ padding:"9px 16px",width:36 }}>
+                <input type="checkbox" checked={filtered.length>0&&filtered.every(r=>selected.has(r.id))}
+                  onChange={()=>{ const allSel=filtered.every(r=>selected.has(r.id)); setSelected(allSel?new Set():new Set(filtered.map(r=>r.id))); }}
+                  style={{ accentColor:T.sky,cursor:"pointer" }}/>
+              </th>
+              {["ID","Device / Monitor","Type","Substation","Status","Last Reading","Live Value","Threshold",""].map(h=>(
                 <th key={h} style={{ padding:"9px 16px",textAlign:"left",fontSize:10,fontWeight:700,color:th.textLo,textTransform:"uppercase",letterSpacing:0.7,whiteSpace:"nowrap" }}>{h}</th>
               ))}
             </tr></thead>
             <tbody>
-              {iotDevices.map(d=>(
+              {filtered.map(d=>(
                 <tr key={d.id} className="row-hover" style={{ borderBottom:`1px solid ${th.borderLo}` }}>
+                  <td style={{ padding:"9px 16px" }}>
+                    <input type="checkbox" checked={selected.has(d.id)} onChange={()=>toggleSelect(d.id)} style={{ accentColor:T.sky,cursor:"pointer" }}/>
+                  </td>
                   <td style={{ padding:"10px 16px",fontSize:11,fontFamily:"'JetBrains Mono',monospace",color:T.sky }}>{d.id}</td>
                   <td style={{ padding:"10px 16px",fontSize:12,fontWeight:600,color:th.text,minWidth:230 }}>{d.name}</td>
                   <td style={{ padding:"10px 16px" }}>
@@ -5969,6 +6351,13 @@ function IoTSCADAPage({ dark, toast }) {
                   <td style={{ padding:"10px 16px",fontSize:13,fontWeight:700,fontFamily:"'JetBrains Mono',monospace",
                     color:d.status==="Alert"?T.rose:d.status==="Offline"?th.textLo:T.emerald }}>{d.value}</td>
                   <td style={{ padding:"10px 16px",fontSize:11,fontFamily:"'JetBrains Mono',monospace",color:th.textLo }}>{d.threshold}</td>
+                  <td style={{ padding:"10px 12px" }}>
+                    <button onClick={()=>handleDeleteSingle(d.id)} style={{ width:28,height:28,borderRadius:6,border:`1px solid ${th.border}`,background:"transparent",cursor:"pointer",color:T.rose+"88",display:"flex",alignItems:"center",justifyContent:"center" }}
+                      onMouseEnter={e=>{e.currentTarget.style.borderColor=T.rose;e.currentTarget.style.color=T.rose;}}
+                      onMouseLeave={e=>{e.currentTarget.style.borderColor=th.border;e.currentTarget.style.color=T.rose+"88";}}>
+                      <Trash2 size={12}/>
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
