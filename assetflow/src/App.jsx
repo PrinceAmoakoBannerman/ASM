@@ -11,7 +11,8 @@ import {
   Mail, Phone, Briefcase, DollarSign, PieChart,
   BarChart2, SlidersHorizontal, Upload, Share2,
   Radio, HardHat, ExternalLink, ArrowRight,
-  CheckSquare, Printer, FileDown, FileSpreadsheet
+  CheckSquare, Printer, FileDown, FileSpreadsheet,
+  Plane, Cpu, AlertOctagon, Network, Map
 } from "lucide-react";
 import {
   AreaChart, Area, BarChart, Bar, LineChart, Line,
@@ -413,6 +414,13 @@ const navItems = [
   { id:"notifications", label:"Notifications",   icon:Bell,            section:"insights"},
   { id:"auditlogs",     label:"Audit Log",       icon:Radio,           section:"insights"},
   { id:"settings",      label:"Settings",        icon:Settings,        section:"system"  },
+  { id:"sld",           label:"Substation SLDs", icon:Zap,             section:"network" },
+  { id:"gis",           label:"GIS & Transmission",icon:Map,           section:"network" },
+  { id:"uav",           label:"UAV Operations",  icon:Plane,           section:"network" },
+  { id:"tools",         label:"Tools & Equipment",icon:SlidersHorizontal,section:"network"},
+  { id:"engineering",   label:"Eng. Projects",   icon:Briefcase,       section:"network" },
+  { id:"risk",          label:"Risk Management", icon:AlertOctagon,    section:"network" },
+  { id:"iot",           label:"IoT & SCADA",     icon:Cpu,             section:"network" },
 ];
 
 /* ═══════════════════════════════════════════════════════════════  UTILS  */
@@ -5180,6 +5188,797 @@ function AuditLogPage({ dark }) {
 }
 
 /* ═══════════════════════════════════════════════════════════════  PLACEHOLDER  */
+/* ═══════════════════════════════════════════════════════════════
+   GRIDCO NETWORK MODULE PAGES
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Substation SLD data ── */
+const substationSLDs = [
+  { id:"SS-01", name:"Achimota",    area:"Greater Accra", voltage:"161kV", equipment:42, sldStatus:"Digitized",  linked:42, pending:0,  last:"2026-06-10" },
+  { id:"SS-02", name:"Tema",        area:"Greater Accra", voltage:"161kV", equipment:38, sldStatus:"Digitized",  linked:35, pending:3,  last:"2026-06-08" },
+  { id:"SS-03", name:"Pokuase",     area:"Greater Accra", voltage:"161kV", equipment:56, sldStatus:"Digitized",  linked:50, pending:6,  last:"2026-05-30" },
+  { id:"SS-04", name:"Kumasi",      area:"Ashanti",       voltage:"161kV", equipment:64, sldStatus:"Digitized",  linked:64, pending:0,  last:"2026-06-01" },
+  { id:"SS-05", name:"Takoradi",    area:"Western",       voltage:"225kV", equipment:48, sldStatus:"Digitized",  linked:40, pending:8,  last:"2026-06-05" },
+  { id:"SS-06", name:"Tamale",      area:"Northern",      voltage:"161kV", equipment:34, sldStatus:"Pending",    linked:0,  pending:34, last:"-" },
+  { id:"SS-07", name:"Bolgatanga",  area:"Upper East",    voltage:"69kV",  equipment:22, sldStatus:"Pending",    linked:0,  pending:22, last:"-" },
+  { id:"SS-08", name:"Sunyani",     area:"Bono",          voltage:"161kV", equipment:30, sldStatus:"Pending",    linked:0,  pending:30, last:"-" },
+];
+
+function SubstationSLDPage({ dark, toast }) {
+  const th = useTheme(dark);
+  const [selected, setSelected] = useState(substationSLDs[0]);
+  const sldStats = [
+    { label:"Total Substations", value:"60+",  icon:Building2,   color:T.sky     },
+    { label:"SLDs Digitized",    value:"5",    icon:CheckCircle, color:T.emerald },
+    { label:"Equipment Linked",  value:"231",  icon:Package,     color:T.violet  },
+    { label:"Pending Mapping",   value:"103",  icon:Clock,       color:T.amber   },
+  ];
+  const eqMap = {
+    "SS-01":{ tr:4, cb:12, dc:8,  pr:18 },
+    "SS-02":{ tr:3, cb:10, dc:7,  pr:15 },
+    "SS-03":{ tr:5, cb:14, dc:9,  pr:22 },
+    "SS-04":{ tr:6, cb:18, dc:12, pr:28 },
+    "SS-05":{ tr:4, cb:11, dc:8,  pr:17 },
+  };
+  const eq = eqMap[selected?.id];
+  return (
+    <div className="page-content" style={{ background:th.bg, minHeight:"100vh", padding:"28px 32px 40px" }}>
+      <div style={{ marginBottom:24 }}>
+        <div style={{ fontSize:22, fontWeight:800, color:th.text }}>Substation Single Line Diagrams</div>
+        <div style={{ fontSize:13, color:th.textMid, marginTop:4 }}>Interactive SLD interface linked to D365 asset database — Pilot: 5 substations</div>
+      </div>
+      <div className="rg-4" style={{ marginBottom:24 }}>
+        {sldStats.map((s,i)=>{ const Ic=s.icon; return (
+          <div key={i} className="card-hover" style={{ background:th.card,borderRadius:14,border:`1px solid ${th.border}`,padding:"18px 20px",display:"flex",alignItems:"center",gap:14 }}>
+            <div style={{ width:44,height:44,borderRadius:12,background:`${s.color}18`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0 }}>
+              <Ic size={20} color={s.color}/>
+            </div>
+            <div>
+              <div style={{ fontSize:22,fontWeight:800,color:th.text,fontFamily:"'JetBrains Mono',monospace" }}>{s.value}</div>
+              <div style={{ fontSize:12,color:th.textMid,marginTop:1 }}>{s.label}</div>
+            </div>
+          </div>
+        );})}
+      </div>
+      <div className="rg-2" style={{ marginBottom:20 }}>
+        {/* List */}
+        <div style={{ background:th.card,borderRadius:14,border:`1px solid ${th.border}`,overflow:"hidden" }}>
+          <div style={{ padding:"16px 20px",borderBottom:`1px solid ${th.border}`,display:"flex",justifyContent:"space-between",alignItems:"center" }}>
+            <div>
+              <div style={{ fontSize:14,fontWeight:700,color:th.text }}>Substation Register</div>
+              <div style={{ fontSize:12,color:th.textMid }}>Click a row to preview SLD</div>
+            </div>
+            <button style={{ fontSize:12,color:T.sky,background:"none",border:`1px solid ${T.sky}40`,borderRadius:8,padding:"5px 12px",cursor:"pointer",fontWeight:600 }}>+ Add Substation</button>
+          </div>
+          <div style={{ overflowX:"auto" }}>
+            <table style={{ width:"100%",borderCollapse:"collapse" }}>
+              <thead><tr style={{ borderBottom:`1px solid ${th.border}` }}>
+                {["ID","Name","Area","Voltage","Equipment","SLD Status","Linked"].map(h=>(
+                  <th key={h} style={{ padding:"10px 14px",textAlign:"left",fontSize:10,fontWeight:700,color:th.textLo,textTransform:"uppercase",letterSpacing:0.8,whiteSpace:"nowrap" }}>{h}</th>
+                ))}
+              </tr></thead>
+              <tbody>
+                {substationSLDs.map(s=>(
+                  <tr key={s.id} className="row-hover" onClick={()=>setSelected(s)} style={{ borderBottom:`1px solid ${th.borderLo}`,cursor:"pointer",background:selected?.id===s.id?`${T.sky}08`:"transparent" }}>
+                    <td style={{ padding:"10px 14px",fontSize:11,fontFamily:"'JetBrains Mono',monospace",color:T.sky }}>{s.id}</td>
+                    <td style={{ padding:"10px 14px",fontSize:13,fontWeight:600,color:th.text }}>{s.name}</td>
+                    <td style={{ padding:"10px 14px",fontSize:12,color:th.textMid }}>{s.area}</td>
+                    <td style={{ padding:"10px 14px",fontSize:11,fontFamily:"'JetBrains Mono',monospace",color:T.amber }}>{s.voltage}</td>
+                    <td style={{ padding:"10px 14px",fontSize:12,color:th.text,textAlign:"center" }}>{s.equipment}</td>
+                    <td style={{ padding:"10px 14px" }}>
+                      <span style={{ fontSize:10,fontWeight:700,padding:"2px 8px",borderRadius:4,
+                        background:s.sldStatus==="Digitized"?`${T.emerald}18`:`${T.amber}18`,
+                        color:s.sldStatus==="Digitized"?T.emerald:T.amber }}>{s.sldStatus}</span>
+                    </td>
+                    <td style={{ padding:"10px 14px",fontSize:12,color:th.textMid }}>{s.linked}/{s.equipment}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        {/* SLD Preview */}
+        <div style={{ background:th.card,borderRadius:14,border:`1px solid ${th.border}`,overflow:"hidden" }}>
+          <div style={{ padding:"16px 20px",borderBottom:`1px solid ${th.border}`,display:"flex",justifyContent:"space-between",alignItems:"center" }}>
+            <div>
+              <div style={{ fontSize:14,fontWeight:700,color:th.text }}>SLD Preview — {selected?.name}</div>
+              <div style={{ fontSize:12,color:th.textMid }}>{selected?.voltage} · {selected?.area}</div>
+            </div>
+            <div style={{ display:"flex",gap:8 }}>
+              <button style={{ fontSize:11,color:th.textMid,background:"none",border:`1px solid ${th.border}`,borderRadius:7,padding:"4px 10px",cursor:"pointer" }}>Export SVG</button>
+              <button style={{ fontSize:11,color:"#fff",background:T.sky,border:"none",borderRadius:7,padding:"4px 10px",cursor:"pointer",fontWeight:600 }}>Edit SLD</button>
+            </div>
+          </div>
+          <div style={{ height:300,position:"relative",overflow:"hidden",padding:20 }}>
+            {selected?.sldStatus==="Digitized" ? (
+              <svg width="100%" height="100%" viewBox="0 0 500 260">
+                <line x1="50" y1="55"  x2="450" y2="55"  stroke={T.sky}     strokeWidth="4" strokeLinecap="round"/>
+                <line x1="50" y1="190" x2="450" y2="190" stroke={T.emerald} strokeWidth="4" strokeLinecap="round"/>
+                {[80,160,240,320,400].map((x,i)=>(
+                  <g key={i}>
+                    <line x1={x} y1="55" x2={x} y2="190" stroke={dark?"#1A3560":"#CBD5E1"} strokeWidth="1.5" strokeDasharray="4,4"/>
+                    <rect x={x-12} y="112" width="24" height="22" rx="4"
+                      fill={i===2?`${T.rose}40`:`${T.emerald}28`}
+                      stroke={i===2?T.rose:T.emerald} strokeWidth="1.5"/>
+                    <text x={x} y="126" textAnchor="middle" fill={i===2?T.rose:T.emerald} fontSize="8" fontWeight="700">CB</text>
+                    {i%2===0&&(
+                      <>
+                        <circle cx={x} cy="82"  r="11" fill="none" stroke={T.sky}     strokeWidth="1.5"/>
+                        <circle cx={x} cy="162" r="11" fill="none" stroke={T.emerald} strokeWidth="1.5"/>
+                        <text x={x} y="230" textAnchor="middle" fill={th.textLo} fontSize="9">TR-{Math.floor(i/2)+1}</text>
+                      </>
+                    )}
+                    <text x={x} y="248" textAnchor="middle" fill={th.textMid} fontSize="8">F-{i+1}</text>
+                  </g>
+                ))}
+                <text x="50" y="44" fill={T.sky}     fontSize="9" fontWeight="800">161kV BUSBAR A</text>
+                <text x="50" y="208" fill={T.emerald} fontSize="9" fontWeight="800">33kV BUSBAR B</text>
+                <circle cx="462" cy="55"  r="5" fill={T.emerald}/>
+                <circle cx="462" cy="190" r="5" fill={T.emerald}/>
+              </svg>
+            ) : (
+              <div style={{ height:"100%",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:12 }}>
+                <div style={{ width:56,height:56,borderRadius:14,background:th.bg2,display:"flex",alignItems:"center",justifyContent:"center" }}>
+                  <Zap size={24} color={th.textLo}/>
+                </div>
+                <div style={{ fontSize:14,fontWeight:700,color:th.textMid }}>SLD not yet digitized</div>
+                <div style={{ fontSize:12,color:th.textLo,textAlign:"center",maxWidth:260 }}>This substation is queued for the next digitization sprint</div>
+                <button style={{ fontSize:12,color:T.sky,background:`${T.sky}10`,border:`1px solid ${T.sky}30`,borderRadius:8,padding:"6px 14px",cursor:"pointer",fontWeight:600,marginTop:4 }}>
+                  Request Prioritization
+                </button>
+              </div>
+            )}
+          </div>
+          {eq&&(
+            <div style={{ borderTop:`1px solid ${th.border}`,padding:"12px 20px",display:"flex",gap:24 }}>
+              {[{l:"Transformers",v:eq.tr,c:T.sky},{l:"Circuit Breakers",v:eq.cb,c:T.emerald},{l:"Disconnectors",v:eq.dc,c:T.amber},{l:"Protection Relays",v:eq.pr,c:T.violet}].map((e,i)=>(
+                <div key={i}>
+                  <div style={{ fontSize:18,fontWeight:800,color:e.c,fontFamily:"'JetBrains Mono',monospace" }}>{e.v}</div>
+                  <div style={{ fontSize:10,color:th.textMid }}>{e.l}</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── GIS / Transmission data ── */
+const transmissionCorridors = [
+  { id:"TL-01", name:"Akosombo – Achimota", voltage:"161kV", length:250, towers:312, drones:"Active",    status:"Operational",       lastInspection:"2026-05-20" },
+  { id:"TL-02", name:"Prestea – Takoradi",  voltage:"225kV", length:180, towers:228, drones:"Scheduled", status:"Operational",       lastInspection:"2025-11-10" },
+  { id:"TL-03", name:"Kumasi – Sunyani",    voltage:"161kV", length:145, towers:184, drones:"Pending",   status:"Operational",       lastInspection:"2025-08-15" },
+  { id:"TL-04", name:"Bolgatanga – Tamale", voltage:"161kV", length:220, towers:278, drones:"Pending",   status:"Under Maintenance", lastInspection:"2025-09-22" },
+  { id:"TL-05", name:"Accra – Tema",        voltage:"161kV", length:30,  towers:38,  drones:"Pending",   status:"Operational",       lastInspection:"2026-01-08" },
+];
+
+function GISTransmissionPage({ dark, toast }) {
+  const th = useTheme(dark);
+  const stats = [
+    { label:"Total Line Length",  value:"6,700+ km", icon:Activity,      color:T.sky     },
+    { label:"Pilot Coverage",     value:"250 km",    icon:CheckCircle,   color:T.emerald },
+    { label:"Towers Registered",  value:"1,040",     icon:Zap,           color:T.amber   },
+    { label:"ROW Encroachments",  value:"14",        icon:AlertTriangle, color:T.rose    },
+  ];
+  return (
+    <div className="page-content" style={{ background:th.bg, minHeight:"100vh", padding:"28px 32px 40px" }}>
+      <div style={{ marginBottom:24 }}>
+        <div style={{ fontSize:22, fontWeight:800, color:th.text }}>GIS — Transmission Line & Land Management</div>
+        <div style={{ fontSize:13, color:th.textMid, marginTop:4 }}>Geospatial management of corridors, ROW, and landed assets · Pilot: 250km across 4 corridors</div>
+      </div>
+      <div className="rg-4" style={{ marginBottom:24 }}>
+        {stats.map((s,i)=>{ const Ic=s.icon; return (
+          <div key={i} className="card-hover" style={{ background:th.card,borderRadius:14,border:`1px solid ${th.border}`,padding:"18px 20px",display:"flex",alignItems:"center",gap:14 }}>
+            <div style={{ width:44,height:44,borderRadius:12,background:`${s.color}18`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0 }}>
+              <Ic size={20} color={s.color}/>
+            </div>
+            <div>
+              <div style={{ fontSize:18,fontWeight:800,color:th.text,fontFamily:"'JetBrains Mono',monospace" }}>{s.value}</div>
+              <div style={{ fontSize:12,color:th.textMid,marginTop:1 }}>{s.label}</div>
+            </div>
+          </div>
+        );})}
+      </div>
+      <div className="rg-2" style={{ marginBottom:20 }}>
+        {/* Map */}
+        <div style={{ background:th.card,borderRadius:14,border:`1px solid ${th.border}`,overflow:"hidden" }}>
+          <div style={{ padding:"16px 20px",borderBottom:`1px solid ${th.border}`,display:"flex",justifyContent:"space-between",alignItems:"center" }}>
+            <div>
+              <div style={{ fontSize:14,fontWeight:700,color:th.text }}>Transmission Network Map</div>
+              <div style={{ fontSize:12,color:th.textMid }}>GIS corridors, substations, and ROW encroachments</div>
+            </div>
+            <div style={{ display:"flex",gap:8 }}>
+              <span style={{ fontSize:11,padding:"3px 8px",borderRadius:6,background:`${T.emerald}18`,color:T.emerald,fontWeight:600 }}>Live</span>
+              <button style={{ fontSize:11,color:th.textMid,background:"none",border:`1px solid ${th.border}`,borderRadius:7,padding:"4px 10px",cursor:"pointer" }}>Layers</button>
+            </div>
+          </div>
+          <div style={{ height:340,background:dark?"#060F1E":"#E8F0F8",position:"relative",overflow:"hidden" }}>
+            <svg width="100%" height="100%" viewBox="0 0 600 340">
+              <path d="M150,40 L420,40 L480,120 L460,280 L300,320 L140,280 L120,160 Z"
+                fill={dark?"#0A1628":"#D1DDE8"} stroke={dark?"#1A3560":"#94A3B8"} strokeWidth="1.5"/>
+              <line x1="220" y1="180" x2="300" y2="120" stroke={T.sky}     strokeWidth="2.5" opacity="0.9"/>
+              <line x1="300" y1="120" x2="200" y2="80"  stroke={T.sky}     strokeWidth="2.5" opacity="0.9"/>
+              <line x1="200" y1="80"  x2="350" y2="160" stroke={T.amber}   strokeWidth="2"   opacity="0.7" strokeDasharray="6,3"/>
+              <line x1="350" y1="160" x2="300" y2="240" stroke={dark?"#1A3560":"#94A3B8"} strokeWidth="1.5" opacity="0.5"/>
+              <line x1="220" y1="180" x2="240" y2="260" stroke={dark?"#1A3560":"#94A3B8"} strokeWidth="1.5" opacity="0.5"/>
+              {[
+                { x:220, y:180, label:"Achimota",  c:T.emerald },
+                { x:300, y:120, label:"Kumasi",    c:T.emerald },
+                { x:200, y:80,  label:"Pokuase",   c:T.emerald },
+                { x:350, y:160, label:"Takoradi",  c:T.amber   },
+                { x:240, y:260, label:"Tema",      c:T.emerald },
+                { x:300, y:240, label:"Tamale",    c:T.rose    },
+              ].map((s,i)=>(
+                <g key={i}>
+                  <circle cx={s.x} cy={s.y} r={8}  fill={s.c} opacity="0.9"/>
+                  <circle cx={s.x} cy={s.y} r={14} fill={s.c} opacity="0.12"/>
+                  <text x={s.x+16} y={s.y+4} fill={th.textMid} fontSize="9" fontWeight="600">{s.label}</text>
+                </g>
+              ))}
+              <circle cx="260" cy="148" r="6"  fill={T.rose} opacity="0.8"/>
+              <circle cx="260" cy="148" r="14" fill={T.rose} opacity="0.12"/>
+              <text x="274" y="152" fill={T.rose} fontSize="8" fontWeight="700">⚠ ROW</text>
+            </svg>
+            <div style={{ position:"absolute",bottom:12,left:16,background:dark?"rgba(5,13,26,0.88)":"rgba(255,255,255,0.92)",
+              borderRadius:8,padding:"8px 12px",display:"flex",flexDirection:"column",gap:5,backdropFilter:"blur(4px)" }}>
+              {[
+                { c:T.sky,     l:"Pilot corridor (250km)" },
+                { c:T.amber,   l:"Scheduled inspection" },
+                { c:T.rose,    l:"ROW encroachment" },
+                { c:T.emerald, l:"Operational substation" },
+              ].map((lg,i)=>(
+                <div key={i} style={{ display:"flex",alignItems:"center",gap:6 }}>
+                  <div style={{ width:9,height:9,borderRadius:"50%",background:lg.c }}/>
+                  <span style={{ fontSize:9,color:th.textMid,fontWeight:500 }}>{lg.l}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+        {/* Corridor table */}
+        <div style={{ background:th.card,borderRadius:14,border:`1px solid ${th.border}`,overflow:"hidden" }}>
+          <div style={{ padding:"16px 20px",borderBottom:`1px solid ${th.border}` }}>
+            <div style={{ fontSize:14,fontWeight:700,color:th.text }}>Transmission Corridors</div>
+            <div style={{ fontSize:12,color:th.textMid }}>GRIDCo national grid — {transmissionCorridors.length} key corridors</div>
+          </div>
+          <div style={{ overflowX:"auto" }}>
+            <table style={{ width:"100%",borderCollapse:"collapse" }}>
+              <thead><tr style={{ borderBottom:`1px solid ${th.border}` }}>
+                {["ID","Corridor","Voltage","Length","Towers","Drone","Status"].map(h=>(
+                  <th key={h} style={{ padding:"9px 14px",textAlign:"left",fontSize:10,fontWeight:700,color:th.textLo,textTransform:"uppercase",letterSpacing:0.7 }}>{h}</th>
+                ))}
+              </tr></thead>
+              <tbody>
+                {transmissionCorridors.map(t=>(
+                  <tr key={t.id} className="row-hover" style={{ borderBottom:`1px solid ${th.borderLo}` }}>
+                    <td style={{ padding:"10px 14px",fontSize:11,fontFamily:"'JetBrains Mono',monospace",color:T.sky }}>{t.id}</td>
+                    <td style={{ padding:"10px 14px",fontSize:12,fontWeight:600,color:th.text }}>{t.name}</td>
+                    <td style={{ padding:"10px 14px",fontSize:11,fontFamily:"'JetBrains Mono',monospace",color:T.amber }}>{t.voltage}</td>
+                    <td style={{ padding:"10px 14px",fontSize:12,color:th.textMid }}>{t.length}km</td>
+                    <td style={{ padding:"10px 14px",fontSize:12,color:th.textMid }}>{t.towers}</td>
+                    <td style={{ padding:"10px 14px" }}>
+                      <span style={{ fontSize:10,fontWeight:700,padding:"2px 7px",borderRadius:4,
+                        background:t.drones==="Active"?`${T.emerald}18`:t.drones==="Scheduled"?`${T.amber}18`:`rgba(100,116,139,0.12)`,
+                        color:t.drones==="Active"?T.emerald:t.drones==="Scheduled"?T.amber:"#64748B" }}>{t.drones}</span>
+                    </td>
+                    <td style={{ padding:"10px 14px" }}>
+                      <span style={{ fontSize:10,fontWeight:700,padding:"2px 7px",borderRadius:4,
+                        background:t.status==="Operational"?`${T.emerald}18`:`${T.amber}18`,
+                        color:t.status==="Operational"?T.emerald:T.amber }}>{t.status}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── UAV data ── */
+const uavFlights = [
+  { id:"FLT-001", corridor:"Akosombo – Achimota",  pilot:"Kofi Asante",  date:"2026-06-10", duration:"4h 20m", status:"Completed",   findings:3 },
+  { id:"FLT-002", corridor:"Prestea – Takoradi",   pilot:"Yaw Darko",    date:"2026-07-15", duration:"—",      status:"Scheduled",   findings:0 },
+  { id:"FLT-003", corridor:"Accra North ROW",       pilot:"James Adu",    date:"2026-06-25", duration:"1h 50m", status:"In Progress", findings:1 },
+  { id:"FLT-004", corridor:"Kumasi Substation",     pilot:"Abena Kwame",  date:"2026-06-18", duration:"2h 10m", status:"Completed",   findings:0 },
+];
+const uavFleet = [
+  { id:"UAV-001", model:"DJI Matrice 350 RTK", serial:"M350-GH-001", status:"Active",     insurance:"2027-03-01", nextMaint:"2026-08-01", flights:42, hours:"86h" },
+  { id:"UAV-002", model:"DJI Matrice 350 RTK", serial:"M350-GH-002", status:"Maintenance",insurance:"2027-03-01", nextMaint:"2026-07-10", flights:38, hours:"79h" },
+  { id:"UAV-003", model:"DJI Zenmuse L2",       serial:"L2-GH-001",  status:"Active",     insurance:"2026-12-15", nextMaint:"2026-09-01", flights:15, hours:"32h" },
+];
+
+function UAVOperationsPage({ dark, toast }) {
+  const th = useTheme(dark);
+  const stats = [
+    { label:"UAV Fleet",           value:"3",    icon:Plane,         color:T.sky     },
+    { label:"Flights This Quarter",value:"6",    icon:CheckCircle,   color:T.emerald },
+    { label:"GCAA Compliance",     value:"100%", icon:Shield,        color:T.violet  },
+    { label:"Defects Found",       value:"4",    icon:AlertTriangle, color:T.amber   },
+  ];
+  return (
+    <div className="page-content" style={{ background:th.bg, minHeight:"100vh", padding:"28px 32px 40px" }}>
+      <div style={{ display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:24 }}>
+        <div>
+          <div style={{ fontSize:22, fontWeight:800, color:th.text }}>UAV Flight Request & Documentation</div>
+          <div style={{ fontSize:13, color:th.textMid, marginTop:4 }}>GCAA-compliant UAV operations, fleet management, and drone inspection data integration</div>
+        </div>
+        <button style={{ fontSize:13,color:"#fff",background:T.sky,border:"none",borderRadius:10,padding:"9px 18px",cursor:"pointer",fontWeight:700 }}>+ New Flight Request</button>
+      </div>
+      <div className="rg-4" style={{ marginBottom:24 }}>
+        {stats.map((s,i)=>{ const Ic=s.icon; return (
+          <div key={i} className="card-hover" style={{ background:th.card,borderRadius:14,border:`1px solid ${th.border}`,padding:"18px 20px",display:"flex",alignItems:"center",gap:14 }}>
+            <div style={{ width:44,height:44,borderRadius:12,background:`${s.color}18`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0 }}>
+              <Ic size={20} color={s.color}/>
+            </div>
+            <div>
+              <div style={{ fontSize:22,fontWeight:800,color:th.text,fontFamily:"'JetBrains Mono',monospace" }}>{s.value}</div>
+              <div style={{ fontSize:12,color:th.textMid,marginTop:1 }}>{s.label}</div>
+            </div>
+          </div>
+        );})}
+      </div>
+      <div className="rg-2" style={{ marginBottom:20 }}>
+        {/* Flight log */}
+        <div style={{ background:th.card,borderRadius:14,border:`1px solid ${th.border}`,overflow:"hidden" }}>
+          <div style={{ padding:"16px 20px",borderBottom:`1px solid ${th.border}` }}>
+            <div style={{ fontSize:14,fontWeight:700,color:th.text }}>Flight Log</div>
+            <div style={{ fontSize:12,color:th.textMid }}>All GCAA-approved flights — 2026</div>
+          </div>
+          <div style={{ overflowX:"auto" }}>
+            <table style={{ width:"100%",borderCollapse:"collapse" }}>
+              <thead><tr style={{ borderBottom:`1px solid ${th.border}` }}>
+                {["Flight ID","Corridor","Pilot","Date","Duration","Findings","Status"].map(h=>(
+                  <th key={h} style={{ padding:"9px 14px",textAlign:"left",fontSize:10,fontWeight:700,color:th.textLo,textTransform:"uppercase",letterSpacing:0.7 }}>{h}</th>
+                ))}
+              </tr></thead>
+              <tbody>
+                {uavFlights.map(f=>(
+                  <tr key={f.id} className="row-hover" style={{ borderBottom:`1px solid ${th.borderLo}` }}>
+                    <td style={{ padding:"10px 14px",fontSize:11,fontFamily:"'JetBrains Mono',monospace",color:T.sky }}>{f.id}</td>
+                    <td style={{ padding:"10px 14px",fontSize:12,color:th.text,fontWeight:600,maxWidth:160,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap" }}>{f.corridor}</td>
+                    <td style={{ padding:"10px 14px",fontSize:12,color:th.textMid }}>{f.pilot}</td>
+                    <td style={{ padding:"10px 14px",fontSize:11,fontFamily:"'JetBrains Mono',monospace",color:th.textMid }}>{f.date}</td>
+                    <td style={{ padding:"10px 14px",fontSize:12,color:th.textMid }}>{f.duration}</td>
+                    <td style={{ padding:"10px 14px",fontSize:13,fontWeight:700,fontFamily:"'JetBrains Mono',monospace",color:f.findings>0?T.amber:T.emerald }}>{f.findings}</td>
+                    <td style={{ padding:"10px 14px" }}>
+                      <span style={{ fontSize:10,fontWeight:700,padding:"2px 7px",borderRadius:4,
+                        background:f.status==="Completed"?`${T.emerald}18`:f.status==="In Progress"?`${T.sky}18`:`${T.amber}18`,
+                        color:f.status==="Completed"?T.emerald:f.status==="In Progress"?T.sky:T.amber }}>{f.status}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        {/* Fleet */}
+        <div style={{ background:th.card,borderRadius:14,border:`1px solid ${th.border}`,overflow:"hidden" }}>
+          <div style={{ padding:"16px 20px",borderBottom:`1px solid ${th.border}` }}>
+            <div style={{ fontSize:14,fontWeight:700,color:th.text }}>UAV Fleet Register</div>
+            <div style={{ fontSize:12,color:th.textMid }}>GCAA-registered drones, insurance, and maintenance tracking</div>
+          </div>
+          {uavFleet.map((u,i)=>(
+            <div key={u.id} style={{ padding:"14px 20px",borderBottom:i<uavFleet.length-1?`1px solid ${th.borderLo}`:"none" }}>
+              <div style={{ display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8 }}>
+                <div>
+                  <div style={{ fontSize:13,fontWeight:700,color:th.text }}>{u.model}</div>
+                  <div style={{ fontSize:11,color:th.textLo,fontFamily:"'JetBrains Mono',monospace" }}>{u.serial}</div>
+                </div>
+                <span style={{ fontSize:10,fontWeight:700,padding:"2px 8px",borderRadius:4,
+                  background:u.status==="Active"?`${T.emerald}18`:`${T.amber}18`,
+                  color:u.status==="Active"?T.emerald:T.amber }}>{u.status}</span>
+              </div>
+              <div style={{ display:"flex",gap:20,flexWrap:"wrap" }}>
+                {[{l:"Total Flights",v:u.flights},{l:"Total Hours",v:u.hours},{l:"Next Maintenance",v:u.nextMaint},{l:"Insurance Expiry",v:u.insurance}].map((d,j)=>(
+                  <div key={j}>
+                    <div style={{ fontSize:13,fontWeight:700,color:th.text,fontFamily:"'JetBrains Mono',monospace" }}>{d.v}</div>
+                    <div style={{ fontSize:10,color:th.textLo }}>{d.l}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Tools & Equipment data ── */
+const toolsData = [
+  { id:"TEQ-001", name:"High Voltage Test Kit (100kV)",     dept:"Substation Engineering", area:"HQ Lab",           status:"Available",   lastUsed:"2026-06-08", calibDue:"2026-09-01" },
+  { id:"TEQ-002", name:"Thermal Imaging Camera (FLIR T560)",dept:"Transmission Ops",       area:"Greater Accra",    status:"In Use",      lastUsed:"2026-06-28", calibDue:"2026-12-15" },
+  { id:"TEQ-003", name:"Power Quality Analyzer (Fluke 435)",dept:"IT & Telecom",           area:"HQ Control Room",  status:"Available",   lastUsed:"2026-05-14", calibDue:"2026-10-01" },
+  { id:"TEQ-004", name:"Insulation Resistance Tester",       dept:"Substation Engineering", area:"Kumasi Area",      status:"Available",   lastUsed:"2026-06-20", calibDue:"2027-01-01" },
+  { id:"TEQ-005", name:"Circuit Breaker Timer (CT-5600)",    dept:"Substation Engineering", area:"HQ Lab",           status:"Maintenance", lastUsed:"2026-06-01", calibDue:"2026-08-01" },
+  { id:"TEQ-006", name:"LiDAR Survey Equipment",             dept:"Transmission Ops",       area:"UAV Team",         status:"In Use",      lastUsed:"2026-06-25", calibDue:"2027-03-01" },
+  { id:"TEQ-007", name:"Relay Test Set (OMICRON CMC 356)",   dept:"Substation Engineering", area:"Tema Area",        status:"Available",   lastUsed:"2026-06-10", calibDue:"2026-11-15" },
+  { id:"TEQ-008", name:"SF6 Gas Analyser",                   dept:"Substation Engineering", area:"Greater Accra",    status:"Available",   lastUsed:"2026-05-28", calibDue:"2026-12-01" },
+];
+
+function ToolsEquipmentPage({ dark, toast }) {
+  const th = useTheme(dark);
+  const stats = [
+    { label:"Total Equipment",  value:"47", icon:SlidersHorizontal, color:T.sky     },
+    { label:"Available",        value:"31", icon:CheckCircle,       color:T.emerald },
+    { label:"In Use",           value:"12", icon:Activity,          color:T.amber   },
+    { label:"Calibration Due",  value:"4",  icon:AlertTriangle,     color:T.rose    },
+  ];
+  return (
+    <div className="page-content" style={{ background:th.bg, minHeight:"100vh", padding:"28px 32px 40px" }}>
+      <div style={{ display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:24 }}>
+        <div>
+          <div style={{ fontSize:22, fontWeight:800, color:th.text }}>Tools & Test Equipment Management</div>
+          <div style={{ fontSize:13, color:th.textMid, marginTop:4 }}>Track, allocate, and calibrate maintenance tools and test equipment across all operational areas</div>
+        </div>
+        <div style={{ display:"flex",gap:8 }}>
+          <button style={{ fontSize:12,color:th.textMid,background:"none",border:`1px solid ${th.border}`,borderRadius:9,padding:"8px 14px",cursor:"pointer",fontWeight:600 }}>Request Equipment</button>
+          <button style={{ fontSize:13,color:"#fff",background:T.sky,border:"none",borderRadius:10,padding:"9px 18px",cursor:"pointer",fontWeight:700 }}>+ Register Equipment</button>
+        </div>
+      </div>
+      <div className="rg-4" style={{ marginBottom:24 }}>
+        {stats.map((s,i)=>{ const Ic=s.icon; return (
+          <div key={i} className="card-hover" style={{ background:th.card,borderRadius:14,border:`1px solid ${th.border}`,padding:"18px 20px",display:"flex",alignItems:"center",gap:14 }}>
+            <div style={{ width:44,height:44,borderRadius:12,background:`${s.color}18`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0 }}>
+              <Ic size={20} color={s.color}/>
+            </div>
+            <div>
+              <div style={{ fontSize:22,fontWeight:800,color:th.text,fontFamily:"'JetBrains Mono',monospace" }}>{s.value}</div>
+              <div style={{ fontSize:12,color:th.textMid,marginTop:1 }}>{s.label}</div>
+            </div>
+          </div>
+        );})}
+      </div>
+      <div style={{ background:th.card,borderRadius:14,border:`1px solid ${th.border}`,overflow:"hidden" }}>
+        <div style={{ padding:"16px 20px",borderBottom:`1px solid ${th.border}`,display:"flex",justifyContent:"space-between",alignItems:"center" }}>
+          <div style={{ fontSize:14,fontWeight:700,color:th.text }}>Equipment Register</div>
+          <div style={{ display:"flex",alignItems:"center",gap:8,background:th.bg1,border:`1px solid ${th.border}`,borderRadius:8,padding:"5px 10px" }}>
+            <Search size={12} color={th.textLo}/>
+            <input placeholder="Search equipment…" style={{ border:"none",background:"transparent",fontSize:12,color:th.text,width:150 }}/>
+          </div>
+        </div>
+        <div style={{ overflowX:"auto" }}>
+          <table style={{ width:"100%",borderCollapse:"collapse" }}>
+            <thead><tr style={{ borderBottom:`1px solid ${th.border}` }}>
+              {["ID","Equipment Name","Department","Area","Status","Last Used","Calibration Due"].map(h=>(
+                <th key={h} style={{ padding:"9px 16px",textAlign:"left",fontSize:10,fontWeight:700,color:th.textLo,textTransform:"uppercase",letterSpacing:0.7,whiteSpace:"nowrap" }}>{h}</th>
+              ))}
+            </tr></thead>
+            <tbody>
+              {toolsData.map(t=>(
+                <tr key={t.id} className="row-hover" style={{ borderBottom:`1px solid ${th.borderLo}` }}>
+                  <td style={{ padding:"10px 16px",fontSize:11,fontFamily:"'JetBrains Mono',monospace",color:T.sky }}>{t.id}</td>
+                  <td style={{ padding:"10px 16px",fontSize:13,fontWeight:600,color:th.text,minWidth:220 }}>{t.name}</td>
+                  <td style={{ padding:"10px 16px",fontSize:12,color:th.textMid }}>{t.dept}</td>
+                  <td style={{ padding:"10px 16px",fontSize:12,color:th.textMid }}>{t.area}</td>
+                  <td style={{ padding:"10px 16px" }}>
+                    <span style={{ fontSize:10,fontWeight:700,padding:"2px 8px",borderRadius:4,
+                      background:t.status==="Available"?`${T.emerald}18`:t.status==="In Use"?`${T.sky}18`:`${T.amber}18`,
+                      color:t.status==="Available"?T.emerald:t.status==="In Use"?T.sky:T.amber }}>{t.status}</span>
+                  </td>
+                  <td style={{ padding:"10px 16px",fontSize:11,fontFamily:"'JetBrains Mono',monospace",color:th.textMid }}>{t.lastUsed}</td>
+                  <td style={{ padding:"10px 16px",fontSize:11,fontFamily:"'JetBrains Mono',monospace",color:t.calibDue<"2026-09-01"?T.amber:th.textMid }}>{t.calibDue}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Engineering Projects data ── */
+const engineeringProjects = [
+  { id:"EP-001", name:"Pokuase Substation Extension",         phase:"Construction",  manager:"Ing. Kweku Ansah",    start:"2025-10-01", end:"2026-12-31", budget:4800000,  spent:2100000, status:"On Track" },
+  { id:"EP-002", name:"161kV Kumasi – Sunyani Line Upgrade",  phase:"Design",        manager:"Ing. Joseph Quartey", start:"2026-01-15", end:"2027-06-30", budget:12500000, spent:480000,  status:"On Track" },
+  { id:"EP-003", name:"SCADA System Modernization",           phase:"Procurement",   manager:"Ing. Akos Darko",     start:"2025-08-01", end:"2026-10-31", budget:3200000,  spent:1850000, status:"Delayed"  },
+  { id:"EP-004", name:"Tamale 330kV Extension",               phase:"Feasibility",   manager:"Ing. Kweku Ansah",    start:"2026-06-01", end:"2028-12-31", budget:38000000, spent:120000,  status:"On Track" },
+  { id:"EP-005", name:"ROW Land Acquisition — Northern",      phase:"Land Survey",   manager:"Mavis Osei-Bonsu",    start:"2026-03-01", end:"2026-11-30", budget:1800000,  spent:630000,  status:"On Track" },
+];
+
+function EngineeringProjectsPage({ dark, toast }) {
+  const th = useTheme(dark);
+  const stats = [
+    { label:"Active Projects",     value:"5",    icon:Briefcase,   color:T.sky     },
+    { label:"On Track",            value:"4",    icon:CheckCircle, color:T.emerald },
+    { label:"Delayed",             value:"1",    icon:Clock,       color:T.amber   },
+    { label:"Total Budget (GHS)",  value:"GHS 60M+", icon:DollarSign, color:T.violet },
+  ];
+  return (
+    <div className="page-content" style={{ background:th.bg, minHeight:"100vh", padding:"28px 32px 40px" }}>
+      <div style={{ display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:24 }}>
+        <div>
+          <div style={{ fontSize:22, fontWeight:800, color:th.text }}>Engineering Design & Project Management</div>
+          <div style={{ fontSize:13, color:th.textMid, marginTop:4 }}>D365 Project Operations — WBS structures, design reviews, financials, and procurement integration</div>
+        </div>
+        <button style={{ fontSize:13,color:"#fff",background:T.sky,border:"none",borderRadius:10,padding:"9px 18px",cursor:"pointer",fontWeight:700 }}>+ New Project</button>
+      </div>
+      <div className="rg-4" style={{ marginBottom:24 }}>
+        {stats.map((s,i)=>{ const Ic=s.icon; return (
+          <div key={i} className="card-hover" style={{ background:th.card,borderRadius:14,border:`1px solid ${th.border}`,padding:"18px 20px",display:"flex",alignItems:"center",gap:14 }}>
+            <div style={{ width:44,height:44,borderRadius:12,background:`${s.color}18`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0 }}>
+              <Ic size={20} color={s.color}/>
+            </div>
+            <div>
+              <div style={{ fontSize:18,fontWeight:800,color:th.text,fontFamily:"'JetBrains Mono',monospace" }}>{s.value}</div>
+              <div style={{ fontSize:12,color:th.textMid,marginTop:1 }}>{s.label}</div>
+            </div>
+          </div>
+        );})}
+      </div>
+      <div style={{ background:th.card,borderRadius:14,border:`1px solid ${th.border}`,overflow:"hidden" }}>
+        <div style={{ padding:"16px 20px",borderBottom:`1px solid ${th.border}` }}>
+          <div style={{ fontSize:14,fontWeight:700,color:th.text }}>Active Engineering Projects</div>
+          <div style={{ fontSize:12,color:th.textMid }}>Integrated with D365 Finance and Supply Chain — budget, WBS, and procurement</div>
+        </div>
+        <div style={{ overflowX:"auto" }}>
+          <table style={{ width:"100%",borderCollapse:"collapse" }}>
+            <thead><tr style={{ borderBottom:`1px solid ${th.border}` }}>
+              {["ID","Project","Phase","Manager","Budget","Spent","Progress","Status"].map(h=>(
+                <th key={h} style={{ padding:"9px 16px",textAlign:"left",fontSize:10,fontWeight:700,color:th.textLo,textTransform:"uppercase",letterSpacing:0.7,whiteSpace:"nowrap" }}>{h}</th>
+              ))}
+            </tr></thead>
+            <tbody>
+              {engineeringProjects.map(p=>{
+                const pct=Math.round((p.spent/p.budget)*100);
+                return (
+                  <tr key={p.id} className="row-hover" style={{ borderBottom:`1px solid ${th.borderLo}` }}>
+                    <td style={{ padding:"10px 16px",fontSize:11,fontFamily:"'JetBrains Mono',monospace",color:T.sky }}>{p.id}</td>
+                    <td style={{ padding:"10px 16px",fontSize:13,fontWeight:600,color:th.text,minWidth:200 }}>{p.name}</td>
+                    <td style={{ padding:"10px 16px" }}>
+                      <span style={{ fontSize:10,fontWeight:700,padding:"2px 7px",borderRadius:4,background:`${T.sky}18`,color:T.sky }}>{p.phase}</span>
+                    </td>
+                    <td style={{ padding:"10px 16px",fontSize:12,color:th.textMid }}>{p.manager}</td>
+                    <td style={{ padding:"10px 16px",fontSize:12,color:th.text,fontFamily:"'JetBrains Mono',monospace" }}>GHS {(p.budget/1000000).toFixed(1)}M</td>
+                    <td style={{ padding:"10px 16px",fontSize:12,color:th.textMid,fontFamily:"'JetBrains Mono',monospace" }}>GHS {(p.spent/1000000).toFixed(2)}M</td>
+                    <td style={{ padding:"10px 16px",minWidth:110 }}>
+                      <div style={{ display:"flex",alignItems:"center",gap:8 }}>
+                        <div style={{ flex:1,height:5,background:th.bg2,borderRadius:3,overflow:"hidden" }}>
+                          <div style={{ height:"100%",width:`${pct}%`,background:pct>60?T.amber:T.sky,borderRadius:3 }}/>
+                        </div>
+                        <span style={{ fontSize:10,color:th.textMid,fontFamily:"'JetBrains Mono',monospace",flexShrink:0 }}>{pct}%</span>
+                      </div>
+                    </td>
+                    <td style={{ padding:"10px 16px" }}>
+                      <span style={{ fontSize:10,fontWeight:700,padding:"2px 8px",borderRadius:4,
+                        background:p.status==="On Track"?`${T.emerald}18`:`${T.amber}18`,
+                        color:p.status==="On Track"?T.emerald:T.amber }}>{p.status}</span>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Risk Management data ── */
+const riskRegister = [
+  { id:"RK-001", asset:"Power Transformer PT-1042",likelihood:2, consequence:5, level:"High",     category:"Asset Failure",    mitigation:"Oil sampling quarterly; thermal monitoring",    status:"Active",     owner:"J. Adu"      },
+  { id:"RK-002", asset:"HV Circuit Breaker CB-18", likelihood:3, consequence:5, level:"Critical", category:"Equipment Failure", mitigation:"Relay calibration WO-002 ongoing",               status:"Mitigating", owner:"A. Frimpong" },
+  { id:"RK-003", asset:"Transmission Tower TT-29", likelihood:2, consequence:4, level:"High",     category:"Structural",        mitigation:"Annual structural inspection due",               status:"Active",     owner:"A. Kwame"    },
+  { id:"RK-004", asset:"Distribution Panel DP-88", likelihood:4, consequence:4, level:"Critical", category:"Safety Hazard",     mitigation:"Decommission pending board approval",           status:"Escalated",  owner:"J. Quartey"  },
+  { id:"RK-005", asset:"SCADA System",             likelihood:2, consequence:5, level:"High",     category:"Cyber Security",    mitigation:"NERC CIP audit completed",                     status:"Active",     owner:"E. Asante"   },
+  { id:"RK-006", asset:"ROW — Akosombo Corridor",  likelihood:3, consequence:3, level:"Medium",   category:"Environmental",     mitigation:"Encroachment monitoring via GIS & UAV",         status:"Active",     owner:"A. Kwame"    },
+  { id:"RK-007", asset:"Fleet Vehicle VH-03",       likelihood:2, consequence:2, level:"Low",      category:"Safety Incident",   mitigation:"Regular servicing and driver briefings",        status:"Active",     owner:"P. Agyemang" },
+];
+
+function RiskManagementPage({ dark, toast }) {
+  const th = useTheme(dark);
+  const lColor = { Critical:T.rose, High:T.amber, Medium:T.sky, Low:T.emerald };
+  const lBg    = { Critical:`${T.rose}18`, High:`${T.amber}18`, Medium:`${T.sky}18`, Low:`${T.emerald}18` };
+  const stats  = [
+    { label:"Critical", value:"2", icon:AlertOctagon, color:T.rose    },
+    { label:"High",     value:"3", icon:AlertTriangle,color:T.amber   },
+    { label:"Medium",   value:"1", icon:Info,         color:T.sky     },
+    { label:"Low",      value:"1", icon:CheckCircle,  color:T.emerald },
+  ];
+  return (
+    <div className="page-content" style={{ background:th.bg, minHeight:"100vh", padding:"28px 32px 40px" }}>
+      <div style={{ display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:24 }}>
+        <div>
+          <div style={{ fontSize:22, fontWeight:800, color:th.text }}>Risk Management</div>
+          <div style={{ fontSize:13, color:th.textMid, marginTop:4 }}>ISO 55000-aligned risk framework — asset, operational, project, and safety risks</div>
+        </div>
+        <button style={{ fontSize:13,color:"#fff",background:T.rose,border:"none",borderRadius:10,padding:"9px 18px",cursor:"pointer",fontWeight:700 }}>+ Log Risk</button>
+      </div>
+      <div className="rg-4" style={{ marginBottom:24 }}>
+        {stats.map((s,i)=>{ const Ic=s.icon; return (
+          <div key={i} className="card-hover" style={{ background:th.card,borderRadius:14,border:`1px solid ${s.color}30`,padding:"18px 20px",display:"flex",alignItems:"center",gap:14 }}>
+            <div style={{ width:44,height:44,borderRadius:12,background:`${s.color}18`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0 }}>
+              <Ic size={20} color={s.color}/>
+            </div>
+            <div>
+              <div style={{ fontSize:28,fontWeight:800,color:s.color,fontFamily:"'JetBrains Mono',monospace" }}>{s.value}</div>
+              <div style={{ fontSize:12,color:th.textMid,marginTop:1 }}>{s.label} Risks</div>
+            </div>
+          </div>
+        );})}
+      </div>
+      <div className="rg-2c" style={{ marginBottom:20 }}>
+        {/* Risk Register table */}
+        <div style={{ gridColumn:"1 / -1",background:th.card,borderRadius:14,border:`1px solid ${th.border}`,overflow:"hidden",marginBottom:20 }}>
+          <div style={{ padding:"16px 20px",borderBottom:`1px solid ${th.border}` }}>
+            <div style={{ fontSize:14,fontWeight:700,color:th.text }}>Risk Register</div>
+            <div style={{ fontSize:12,color:th.textMid }}>Likelihood × Consequence scoring (1–5 scale) — ISO 55000 framework</div>
+          </div>
+          <div style={{ overflowX:"auto" }}>
+            <table style={{ width:"100%",borderCollapse:"collapse" }}>
+              <thead><tr style={{ borderBottom:`1px solid ${th.border}` }}>
+                {["ID","Asset / Area","Category","L","C","Score","Level","Owner","Status"].map(h=>(
+                  <th key={h} style={{ padding:"9px 14px",textAlign:"left",fontSize:10,fontWeight:700,color:th.textLo,textTransform:"uppercase",letterSpacing:0.7,whiteSpace:"nowrap" }}>{h}</th>
+                ))}
+              </tr></thead>
+              <tbody>
+                {riskRegister.map(r=>{
+                  const score=r.likelihood*r.consequence;
+                  return (
+                    <tr key={r.id} className="row-hover" style={{ borderBottom:`1px solid ${th.borderLo}` }}>
+                      <td style={{ padding:"10px 14px",fontSize:11,fontFamily:"'JetBrains Mono',monospace",color:T.sky }}>{r.id}</td>
+                      <td style={{ padding:"10px 14px",fontSize:12,fontWeight:600,color:th.text,minWidth:180 }}>{r.asset}</td>
+                      <td style={{ padding:"10px 14px",fontSize:12,color:th.textMid }}>{r.category}</td>
+                      <td style={{ padding:"10px 14px",fontSize:13,fontWeight:700,color:th.text,fontFamily:"'JetBrains Mono',monospace",textAlign:"center" }}>{r.likelihood}</td>
+                      <td style={{ padding:"10px 14px",fontSize:13,fontWeight:700,color:th.text,fontFamily:"'JetBrains Mono',monospace",textAlign:"center" }}>{r.consequence}</td>
+                      <td style={{ padding:"10px 14px",textAlign:"center" }}>
+                        <span style={{ fontSize:14,fontWeight:800,fontFamily:"'JetBrains Mono',monospace",color:lColor[r.level] }}>{score}</span>
+                      </td>
+                      <td style={{ padding:"10px 14px" }}>
+                        <span style={{ fontSize:10,fontWeight:700,padding:"2px 8px",borderRadius:4,background:lBg[r.level],color:lColor[r.level] }}>{r.level}</span>
+                      </td>
+                      <td style={{ padding:"10px 14px",fontSize:12,color:th.textMid }}>{r.owner}</td>
+                      <td style={{ padding:"10px 14px" }}>
+                        <span style={{ fontSize:10,fontWeight:700,padding:"2px 8px",borderRadius:4,
+                          background:r.status==="Escalated"?`${T.rose}18`:r.status==="Mitigating"?`${T.amber}18`:`rgba(100,116,139,0.1)`,
+                          color:r.status==="Escalated"?T.rose:r.status==="Mitigating"?T.amber:"#94A3B8" }}>{r.status}</span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      {/* Risk Heat Map */}
+      <div style={{ background:th.card,borderRadius:14,border:`1px solid ${th.border}`,padding:24,display:"inline-block" }}>
+        <div style={{ fontSize:14,fontWeight:700,color:th.text,marginBottom:4 }}>Risk Heat Map</div>
+        <div style={{ fontSize:12,color:th.textMid,marginBottom:16 }}>5×5 Likelihood × Consequence matrix</div>
+        <div style={{ display:"grid",gridTemplateColumns:"36px repeat(5, 52px)",gap:3 }}>
+          <div/>
+          {[1,2,3,4,5].map(c=>(
+            <div key={c} style={{ textAlign:"center",fontSize:9,color:th.textLo,fontWeight:700,paddingBottom:4 }}>C={c}</div>
+          ))}
+          {[5,4,3,2,1].map(l=>(
+            [null,...[1,2,3,4,5]].map((c,ci)=>{
+              if(ci===0) return (
+                <div key={`l${l}`} style={{ display:"flex",alignItems:"center",justifyContent:"flex-end",fontSize:9,color:th.textLo,fontWeight:700,paddingRight:4 }}>L={l}</div>
+              );
+              const sc=l*c;
+              const bg=sc>=15?`${T.rose}28`:sc>=10?`${T.amber}28`:sc>=6?`${T.sky}1A`:`${T.emerald}18`;
+              const br=sc>=15?`${T.rose}50`:sc>=10?`${T.amber}50`:sc>=6?`${T.sky}40`:`${T.emerald}40`;
+              const dot=riskRegister.find(r=>r.likelihood===l&&r.consequence===c);
+              return (
+                <div key={`${l}-${c}`} style={{ height:44,borderRadius:6,background:bg,border:`1px solid ${br}`,display:"flex",alignItems:"center",justifyContent:"center",position:"relative" }}>
+                  <span style={{ fontSize:11,fontWeight:700,color:sc>=15?T.rose:sc>=10?T.amber:sc>=6?T.sky:T.emerald,fontFamily:"'JetBrains Mono',monospace" }}>{sc}</span>
+                  {dot&&<div style={{ position:"absolute",top:4,right:4,width:7,height:7,borderRadius:"50%",background:lColor[dot.level] }}/>}
+                </div>
+              );
+            })
+          ))}
+        </div>
+        <div style={{ display:"flex",gap:16,marginTop:14,flexWrap:"wrap" }}>
+          {[{l:"Critical (≥15)",c:T.rose},{l:"High (10–14)",c:T.amber},{l:"Medium (6–9)",c:T.sky},{l:"Low (<6)",c:T.emerald}].map((lg,i)=>(
+            <div key={i} style={{ display:"flex",alignItems:"center",gap:5 }}>
+              <div style={{ width:9,height:9,borderRadius:2,background:lg.c,opacity:0.7 }}/>
+              <span style={{ fontSize:10,color:th.textMid }}>{lg.l}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── IoT / SCADA data ── */
+const iotDevices = [
+  { id:"IOT-001", name:"Transformer PT-1042 — Load Monitor",   type:"Smart Meter", substation:"Achimota",    status:"Online",  last:"09:42", value:"78.4 MVA",  threshold:"150 MVA" },
+  { id:"IOT-002", name:"HV Busbar Temp Sensor — SS-02",        type:"Sensor",      substation:"Tema",        status:"Online",  last:"09:40", value:"42°C",      threshold:"65°C"    },
+  { id:"IOT-003", name:"Circuit Breaker CB-18 — Op. Counter",  type:"IED",         substation:"Tema",        status:"Alert",   last:"09:35", value:"8,921 ops", threshold:"10,000"  },
+  { id:"IOT-004", name:"Power Quality Meter — Kumasi SS-04",   type:"Power Meter", substation:"Kumasi",      status:"Online",  last:"09:38", value:"0.97 pf",   threshold:"0.90 pf" },
+  { id:"IOT-005", name:"Transformer PT-2001 DGA Monitor",      type:"Gas Sensor",  substation:"Pokuase",     status:"Online",  last:"08:55", value:"H₂: 14ppm", threshold:"100ppm"  },
+  { id:"IOT-006", name:"Overhead Line Sag Monitor — TL-01/47", type:"Sensor",      substation:"N/A (Line)",  status:"Offline", last:"Jun 28",value:"—",         threshold:"—"       },
+  { id:"IOT-007", name:"SCADA RTU — Takoradi 225kV",           type:"RTU/SCADA",   substation:"Takoradi",    status:"Online",  last:"09:42", value:"225.1 kV",  threshold:"—"       },
+];
+
+function IoTSCADAPage({ dark, toast }) {
+  const th = useTheme(dark);
+  const stats = [
+    { label:"Connected Devices", value:"127", icon:Cpu,          color:T.sky     },
+    { label:"Online",            value:"124", icon:CheckCircle,  color:T.emerald },
+    { label:"Active Alarms",     value:"3",   icon:AlertOctagon, color:T.rose    },
+    { label:"Data Streams/sec",  value:"48",  icon:Activity,     color:T.violet  },
+  ];
+  return (
+    <div className="page-content" style={{ background:th.bg, minHeight:"100vh", padding:"28px 32px 40px" }}>
+      <div style={{ display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:24 }}>
+        <div>
+          <div style={{ fontSize:22, fontWeight:800, color:th.text }}>IoT & Real-Time Data Integration</div>
+          <div style={{ fontSize:13, color:th.textMid, marginTop:4 }}>Live SCADA, IED, and sensor data integrated into D365 asset condition monitoring</div>
+        </div>
+        <div style={{ display:"flex",alignItems:"center",gap:8,padding:"7px 14px",borderRadius:20,
+          background:"rgba(16,185,129,0.1)",border:"1px solid rgba(16,185,129,0.2)" }}>
+          <div style={{ width:7,height:7,borderRadius:"50%",background:T.emerald,animation:"pulse-ring 2s ease-out infinite" }}/>
+          <span style={{ fontSize:12,color:T.emerald,fontWeight:700 }}>SCADA Live</span>
+        </div>
+      </div>
+      <div className="rg-4" style={{ marginBottom:24 }}>
+        {stats.map((s,i)=>{ const Ic=s.icon; return (
+          <div key={i} className="card-hover" style={{ background:th.card,borderRadius:14,border:`1px solid ${th.border}`,padding:"18px 20px",display:"flex",alignItems:"center",gap:14 }}>
+            <div style={{ width:44,height:44,borderRadius:12,background:`${s.color}18`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0 }}>
+              <Ic size={20} color={s.color}/>
+            </div>
+            <div>
+              <div style={{ fontSize:22,fontWeight:800,color:th.text,fontFamily:"'JetBrains Mono',monospace" }}>{s.value}</div>
+              <div style={{ fontSize:12,color:th.textMid,marginTop:1 }}>{s.label}</div>
+            </div>
+          </div>
+        );})}
+      </div>
+      <div style={{ background:th.card,borderRadius:14,border:`1px solid ${th.border}`,overflow:"hidden" }}>
+        <div style={{ padding:"16px 20px",borderBottom:`1px solid ${th.border}`,display:"flex",justifyContent:"space-between",alignItems:"center" }}>
+          <div>
+            <div style={{ fontSize:14,fontWeight:700,color:th.text }}>Connected Devices — Live Feed</div>
+            <div style={{ fontSize:12,color:th.textMid }}>SCADA, IEDs, sensors, smart meters across GRIDCo substations and lines</div>
+          </div>
+          <button style={{ fontSize:11,color:T.sky,background:"none",border:`1px solid ${T.sky}40`,borderRadius:7,padding:"5px 12px",cursor:"pointer",fontWeight:600 }}>Configure Alerts</button>
+        </div>
+        <div style={{ overflowX:"auto" }}>
+          <table style={{ width:"100%",borderCollapse:"collapse" }}>
+            <thead><tr style={{ borderBottom:`1px solid ${th.border}` }}>
+              {["ID","Device / Monitor","Type","Substation","Status","Last Reading","Live Value","Threshold"].map(h=>(
+                <th key={h} style={{ padding:"9px 16px",textAlign:"left",fontSize:10,fontWeight:700,color:th.textLo,textTransform:"uppercase",letterSpacing:0.7,whiteSpace:"nowrap" }}>{h}</th>
+              ))}
+            </tr></thead>
+            <tbody>
+              {iotDevices.map(d=>(
+                <tr key={d.id} className="row-hover" style={{ borderBottom:`1px solid ${th.borderLo}` }}>
+                  <td style={{ padding:"10px 16px",fontSize:11,fontFamily:"'JetBrains Mono',monospace",color:T.sky }}>{d.id}</td>
+                  <td style={{ padding:"10px 16px",fontSize:12,fontWeight:600,color:th.text,minWidth:230 }}>{d.name}</td>
+                  <td style={{ padding:"10px 16px" }}>
+                    <span style={{ fontSize:10,fontWeight:600,padding:"2px 7px",borderRadius:4,background:`${T.violet}18`,color:T.violet }}>{d.type}</span>
+                  </td>
+                  <td style={{ padding:"10px 16px",fontSize:12,color:th.textMid }}>{d.substation}</td>
+                  <td style={{ padding:"10px 16px" }}>
+                    <div style={{ display:"flex",alignItems:"center",gap:5 }}>
+                      <div style={{ width:6,height:6,borderRadius:"50%",
+                        background:d.status==="Online"?T.emerald:d.status==="Alert"?T.rose:T.amber,
+                        ...(d.status==="Online"?{animation:"pulse-ring 2s ease-out infinite"}:{}) }}/>
+                      <span style={{ fontSize:11,fontWeight:600,color:d.status==="Online"?T.emerald:d.status==="Alert"?T.rose:T.amber }}>{d.status}</span>
+                    </div>
+                  </td>
+                  <td style={{ padding:"10px 16px",fontSize:10,fontFamily:"'JetBrains Mono',monospace",color:th.textLo }}>{d.last}</td>
+                  <td style={{ padding:"10px 16px",fontSize:13,fontWeight:700,fontFamily:"'JetBrains Mono',monospace",
+                    color:d.status==="Alert"?T.rose:d.status==="Offline"?th.textLo:T.emerald }}>{d.value}</td>
+                  <td style={{ padding:"10px 16px",fontSize:11,fontFamily:"'JetBrains Mono',monospace",color:th.textLo }}>{d.threshold}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function PlaceholderPage({ label, dark }) {
   const th = useTheme(dark);
   return (
@@ -5245,16 +6044,24 @@ export default function App() {
     compliance:    <CompliancePage  dark={dark} toast={toast}/>,
     disposal:      <DisposalPage    dark={dark} toast={toast}/>,
     warranty:      <WarrantyPage    dark={dark} toast={toast}/>,
-    financials:    <FinancialsPage  dark={dark} toast={toast}/>,
-    auditlogs:     <AuditLogPage    dark={dark}/>,
+    financials:    <FinancialsPage       dark={dark} toast={toast}/>,
+    auditlogs:     <AuditLogPage         dark={dark}/>,
+    sld:           <SubstationSLDPage    dark={dark} toast={toast}/>,
+    gis:           <GISTransmissionPage  dark={dark} toast={toast}/>,
+    uav:           <UAVOperationsPage    dark={dark} toast={toast}/>,
+    tools:         <ToolsEquipmentPage   dark={dark} toast={toast}/>,
+    engineering:   <EngineeringProjectsPage dark={dark} toast={toast}/>,
+    risk:          <RiskManagementPage   dark={dark} toast={toast}/>,
+    iot:           <IoTSCADAPage         dark={dark} toast={toast}/>,
   };
   const pageEl = pageMap[page] || <PlaceholderPage label={navItems.find(n=>n.id===page)?.label||page} dark={dark}/>;
 
   const sections = [
-    { id:"main",    label:"Operations",  items: navItems.filter(n=>n.section==="main")    },
-    { id:"manage",  label:"Manage",      items: navItems.filter(n=>n.section==="manage")  },
-    { id:"insights",label:"Insights",    items: navItems.filter(n=>n.section==="insights")},
-    { id:"system",  label:"System",      items: navItems.filter(n=>n.section==="system")  },
+    { id:"main",    label:"Operations",    items: navItems.filter(n=>n.section==="main")    },
+    { id:"network", label:"GRIDCo Network",items: navItems.filter(n=>n.section==="network") },
+    { id:"manage",  label:"Manage",        items: navItems.filter(n=>n.section==="manage")  },
+    { id:"insights",label:"Insights",      items: navItems.filter(n=>n.section==="insights")},
+    { id:"system",  label:"System",        items: navItems.filter(n=>n.section==="system")  },
   ];
 
   return (
