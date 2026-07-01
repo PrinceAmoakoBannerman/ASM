@@ -2516,14 +2516,29 @@ function LoginPage({ onLogin }) {
     setTimeout(()=>{ setLoading(false); onLogin(); }, 1400);
   };
 
+  /* Ghana transmission network nodes */
+  const nodes = [
+    { id:"ACR", label:"ACCRA",      x:204, y:258 },
+    { id:"TEM", label:"TEMA",       x:225, y:255 },
+    { id:"TDI", label:"TAKORADI",   x:136, y:258 },
+    { id:"POK", label:"POKUASE",    x:198, y:244 },
+    { id:"KSI", label:"KUMASI",     x:172, y:196 },
+    { id:"SUN", label:"SUNYANI",    x:152, y:173 },
+    { id:"TAM", label:"TAMALE",     x:198, y:120 },
+    { id:"BOL", label:"BOLGATANGA", x:212, y:75  },
+  ];
+  const links = [["ACR","TEM"],["ACR","POK"],["POK","KSI"],["KSI","TDI"],["KSI","SUN"],["KSI","TAM"],["TAM","BOL"]];
+  const nm = {};
+  nodes.forEach(n=>{ nm[n.id]=n; });
+
   return (
     <div style={{ minHeight:"100vh", display:"flex", background:T.d0, fontFamily:"'Inter',-apple-system,sans-serif", overflow:"hidden" }}>
       <style>{css}</style>
 
-      {/* Left — brand panel */}
-      <div className="login-brand" style={{ flex:1, position:"relative", display:"flex", flexDirection:"column", justifyContent:"center", padding:"36px 72px", overflow:"hidden" }}>
-        {/* Animated grid */}
-        <svg style={{ position:"absolute",inset:0,width:"100%",height:"100%",opacity:0.05 }}>
+      {/* ── Left: original brand panel ── */}
+      <div className="login-brand" style={{ flex:1, position:"relative", display:"flex", flexDirection:"column", justifyContent:"center", padding:"36px 64px", overflow:"hidden" }}>
+        {/* Grid pattern */}
+        <svg style={{ position:"absolute",inset:0,width:"100%",height:"100%",opacity:0.05,pointerEvents:"none" }}>
           <defs>
             <pattern id="pg" width="48" height="48" patternUnits="userSpaceOnUse">
               <path d="M 48 0 L 0 0 0 48" fill="none" stroke={T.sky} strokeWidth="0.8"/>
@@ -2532,110 +2547,152 @@ function LoginPage({ onLogin }) {
           <rect width="100%" height="100%" fill="url(#pg)"/>
         </svg>
         {/* Glow orbs */}
-        <div style={{ position:"absolute",top:"25%",left:"40%",width:360,height:360,borderRadius:"50%",background:`radial-gradient(circle,${T.sky}20 0%,transparent 70%)`,pointerEvents:"none" }}/>
-        <div style={{ position:"absolute",bottom:"20%",right:"5%",width:240,height:240,borderRadius:"50%",background:`radial-gradient(circle,${T.violet}15 0%,transparent 70%)`,pointerEvents:"none" }}/>
+        <div style={{ position:"absolute",top:"20%",left:"35%",width:340,height:340,borderRadius:"50%",background:`radial-gradient(circle,${T.sky}1A 0%,transparent 70%)`,pointerEvents:"none" }}/>
+        <div style={{ position:"absolute",bottom:"15%",right:"0%",width:220,height:220,borderRadius:"50%",background:`radial-gradient(circle,${T.violet}12 0%,transparent 70%)`,pointerEvents:"none" }}/>
 
         <div style={{ position:"relative",zIndex:1 }}>
           {/* Logo */}
-          <div style={{ display:"flex",alignItems:"center",marginBottom:32 }}>
+          <div style={{ display:"flex",alignItems:"center",marginBottom:28 }}>
             <div style={{ background:"#fff",borderRadius:10,padding:"8px 16px",display:"inline-flex",alignItems:"center" }}>
               <img src="/gridco-logo.png" alt="GRIDCo" style={{ height:32,width:"auto" }}/>
             </div>
           </div>
 
-          {/* Live instrument strip */}
-          <div style={{ display:"flex",gap:24,marginBottom:24 }}>
+          {/* Arc gauges */}
+          <div style={{ display:"flex",gap:20,marginBottom:22 }}>
             {[
               {l:"Grid Health",  v:94,  c:T.emerald},
               {l:"System Uptime",v:100, c:T.sky    },
               {l:"Capacity Util",v:78,  c:T.amber  },
-            ].map(g=><ArcGauge key={g.l} value={g.v} label={g.l} color={g.c} size={95}/>)}
+            ].map(g=><ArcGauge key={g.l} value={g.v} label={g.l} color={g.c} size={90}/>)}
           </div>
 
-          <h1 style={{ fontSize:44,fontWeight:900,color:T.hi,lineHeight:1.12,letterSpacing:-1.5,marginBottom:16,maxWidth:520 }}>
-            The asset platform<br/>
-            <span style={{ background:`linear-gradient(90deg,${T.sky},${T.arc})`,WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent" }}>
-              Backbone to Power Delivery.
-            </span>
-          </h1>
-          <p style={{ fontSize:15,color:"rgba(255,255,255,0.45)",lineHeight:1.75,maxWidth:440,marginBottom:24 }}>
-            GRIDCo's enterprise asset management platform gives Ghana's national transmission utility real-time visibility over every transformer, substation, vehicle, and safety asset across the network.
-          </p>
+          {/* Text + Map side by side */}
+          <div style={{ display:"flex", alignItems:"flex-start", gap:32, marginBottom:24 }}>
+            {/* Left: text */}
+            <div style={{ flex:1, minWidth:0 }}>
+              <h1 style={{ fontSize:36,fontWeight:900,color:T.hi,lineHeight:1.12,letterSpacing:-1.5,marginBottom:14 }}>
+                The asset platform<br/>
+                <span style={{ background:`linear-gradient(90deg,${T.sky},${T.arc})`,WebkitBackgroundClip:"text",WebkitTextFillColor:"transparent" }}>
+                  Backbone to Power Delivery.
+                </span>
+              </h1>
+              <p style={{ fontSize:13,color:"rgba(255,255,255,0.42)",lineHeight:1.75,marginBottom:0 }}>
+                GRIDCo's enterprise asset management platform gives Ghana's national transmission utility real-time visibility over every transformer, substation, vehicle, and safety asset across the network.
+              </p>
+            </div>
 
-          {/* Metric row */}
-          <div style={{ display:"flex",gap:40 }}>
-            {[["4,827","Assets tracked"],["12","Departments"],["99.7%","System uptime"],["₵2.84B","Portfolio value"]].map(([v,l])=>(
+            {/* Right: Ghana network map */}
+            <div style={{ flexShrink:0, display:"flex", flexDirection:"column", alignItems:"center", gap:8, marginTop:-16 }}>
+              <svg viewBox="82 48 246 230" style={{ width:230, height:260 }}>
+                {/* Ghana outline */}
+                <path d="M 104,256 L 120,266 L 138,270 L 162,270 L 188,270 L 212,268 L 232,260 L 248,248 L 254,232 L 252,212 L 258,192 L 260,168 L 254,144 L 246,118 L 234,94 L 218,72 L 200,60 L 180,56 L 160,58 L 142,66 L 126,80 L 112,100 L 102,124 L 96,152 L 96,180 L 100,210 L 102,236 Z"
+                  fill="rgba(14,165,233,0.05)" stroke="rgba(14,165,233,0.3)" strokeWidth="1.2" strokeLinejoin="round"/>
+                {/* Region dividers */}
+                <line x1="96" y1="172" x2="260" y2="172" stroke="rgba(14,165,233,0.08)" strokeWidth="0.7" strokeDasharray="3,4"/>
+                <line x1="96" y1="212" x2="260" y2="212" stroke="rgba(14,165,233,0.08)" strokeWidth="0.7" strokeDasharray="3,4"/>
+                {/* Transmission lines */}
+                {links.map(([a,b],i)=>{
+                  const na=nm[a],nb=nm[b]; if(!na||!nb) return null;
+                  return <line key={i} x1={na.x} y1={na.y} x2={nb.x} y2={nb.y}
+                    stroke="rgba(14,165,233,0.5)" strokeWidth="1.3" strokeDasharray="5,3"/>;
+                })}
+                {/* Nodes */}
+                {nodes.map(n=>(
+                  <g key={n.id}>
+                    <circle cx={n.x} cy={n.y} r={8}  fill="rgba(14,165,233,0.1)"/>
+                    <circle cx={n.x} cy={n.y} r={4}   fill="#0EA5E9" opacity={0.9}/>
+                    <circle cx={n.x} cy={n.y} r={2}   fill="#fff"    opacity={0.95}/>
+                    <text x={n.x} y={n.y-10} textAnchor="middle"
+                      fill="rgba(255,255,255,0.55)" fontSize="7"
+                      fontFamily="'JetBrains Mono',monospace" fontWeight="700" letterSpacing="0.3">
+                      {n.label}
+                    </text>
+                  </g>
+                ))}
+              </svg>
+              {/* Legend */}
+              <div style={{ display:"flex",gap:14,alignSelf:"flex-start",paddingLeft:6 }}>
+                {[{c:T.sky,l:"Corridors"},{c:T.emerald,l:"Substations"}].map((lg,i)=>(
+                  <div key={i} style={{ display:"flex",alignItems:"center",gap:5 }}>
+                    <div style={{ width:6,height:6,borderRadius:"50%",background:lg.c,flexShrink:0 }}/>
+                    <span style={{ fontSize:9,color:"rgba(255,255,255,0.28)",fontFamily:"'JetBrains Mono',monospace" }}>{lg.l}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Metrics */}
+          <div style={{ display:"flex",gap:32,paddingTop:18,borderTop:"1px solid rgba(14,165,233,0.1)" }}>
+            {[["4,827","Assets tracked"],["12","Departments"],["99.7%","System uptime"]].map(([v,l])=>(
               <div key={l}>
-                <div style={{ fontSize:22,fontWeight:900,color:T.sky,fontFamily:"'JetBrains Mono',monospace" }}>{v}</div>
-                <div style={{ fontSize:11,color:"rgba(255,255,255,0.35)",marginTop:2 }}>{l}</div>
+                <div style={{ fontSize:20,fontWeight:900,color:T.sky,fontFamily:"'JetBrains Mono',monospace" }}>{v}</div>
+                <div style={{ fontSize:10,color:"rgba(255,255,255,0.3)",marginTop:2 }}>{l}</div>
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      {/* Right — form */}
-      <div className="login-form-panel" style={{ width:460,background:"#ffffff",display:"flex",flexDirection:"column",justifyContent:"center",padding:"60px 50px",position:"relative" }}>
-        <div style={{ position:"absolute",top:0,left:0,bottom:0,width:1,background:`linear-gradient(180deg,transparent,${T.sky}44,transparent)` }}/>
+      {/* ── Right: dark form panel ── */}
+      <div className="login-form-panel" style={{ width:460, background:"#060F1E", display:"flex", flexDirection:"column", justifyContent:"center", padding:"60px 48px", position:"relative", borderLeft:"1px solid rgba(14,165,233,0.1)" }}>
 
-        <div style={{ marginBottom:44 }}>
-          <img src="/gridco-logo.png" alt="GRIDCo" style={{ height:36,width:"auto" }}/>
+        <div style={{ marginBottom:40 }}>
+          <div style={{ fontSize:9, fontFamily:"'JetBrains Mono',monospace", color:"rgba(255,255,255,0.2)", letterSpacing:2.5, marginBottom:16, textTransform:"uppercase" }}>Secure Access Portal</div>
+          <h2 style={{ fontSize:28, fontWeight:900, color:"#F1F5F9", letterSpacing:-0.8, marginBottom:8 }}>Sign in</h2>
+          <p style={{ fontSize:13, color:"rgba(255,255,255,0.3)", lineHeight:1.6 }}>GRIDCo Enterprise Asset Management System</p>
         </div>
 
-        <h2 style={{ fontSize:26,fontWeight:800,color:T.d0,letterSpacing:-0.5,marginBottom:6 }}>Sign in</h2>
-        <p style={{ fontSize:14,color:"#64748B",marginBottom:36 }}>Access your asset management portal</p>
-
-        {/* Email */}
         <div style={{ marginBottom:16 }}>
-          <label style={{ display:"block",fontSize:11,fontWeight:700,color:"#475569",marginBottom:7,textTransform:"uppercase",letterSpacing:0.6 }}>Work email</label>
-          <div style={{ display:"flex",alignItems:"center",gap:10,border:`1.5px solid ${focusEmail?T.sky:"#E2E8F0"}`,
-            borderRadius:10,padding:"11px 14px",transition:"border-color 0.15s",background:focusEmail?"#F8FBFF":"#fff" }}>
-            <Mail size={15} color={focusEmail?T.sky:"#94A3B8"}/>
+          <label style={{ display:"block", fontSize:9, fontWeight:700, color:"rgba(255,255,255,0.25)", marginBottom:8, textTransform:"uppercase", letterSpacing:1.5, fontFamily:"'JetBrains Mono',monospace" }}>Work Email</label>
+          <div style={{ display:"flex", alignItems:"center", gap:10, border:`1px solid ${focusEmail?"rgba(14,165,233,0.5)":"rgba(255,255,255,0.07)"}`, borderRadius:7, padding:"11px 14px", background:"rgba(255,255,255,0.02)", transition:"border-color 0.15s" }}>
+            <Mail size={13} color={focusEmail?"#0EA5E9":"rgba(255,255,255,0.18)"}/>
             <input value={email} onChange={e=>setEmail(e.target.value)} type="email"
               placeholder="you@gridco.com.gh"
               onFocus={()=>setFocusEmail(true)} onBlur={()=>setFocusEmail(false)}
-              style={{ border:"none",background:"transparent",fontSize:14,color:T.d0,flex:1 }}/>
+              style={{ border:"none", background:"transparent", fontSize:14, color:"#E2E8F0", flex:1 }}/>
           </div>
         </div>
 
-        {/* Password */}
         <div style={{ marginBottom:10 }}>
-          <label style={{ display:"block",fontSize:11,fontWeight:700,color:"#475569",marginBottom:7,textTransform:"uppercase",letterSpacing:0.6 }}>Password</label>
-          <div style={{ display:"flex",alignItems:"center",gap:10,border:`1.5px solid ${focusPass?T.sky:"#E2E8F0"}`,
-            borderRadius:10,padding:"11px 14px",transition:"border-color 0.15s",background:focusPass?"#F8FBFF":"#fff" }}>
-            <Lock size={15} color={focusPass?T.sky:"#94A3B8"}/>
+          <label style={{ display:"block", fontSize:9, fontWeight:700, color:"rgba(255,255,255,0.25)", marginBottom:8, textTransform:"uppercase", letterSpacing:1.5, fontFamily:"'JetBrains Mono',monospace" }}>Password</label>
+          <div style={{ display:"flex", alignItems:"center", gap:10, border:`1px solid ${focusPass?"rgba(14,165,233,0.5)":"rgba(255,255,255,0.07)"}`, borderRadius:7, padding:"11px 14px", background:"rgba(255,255,255,0.02)", transition:"border-color 0.15s" }}>
+            <Lock size={13} color={focusPass?"#0EA5E9":"rgba(255,255,255,0.18)"}/>
             <input type="password" value={pass} onChange={e=>setPass(e.target.value)} placeholder="••••••••"
               onFocus={()=>setFocusPass(true)} onBlur={()=>setFocusPass(false)}
-              style={{ border:"none",background:"transparent",fontSize:14,color:T.d0,flex:1 }}/>
+              style={{ border:"none", background:"transparent", fontSize:14, color:"#E2E8F0", flex:1 }}/>
           </div>
         </div>
 
-        <div style={{ display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:28 }}>
-          <label style={{ display:"flex",alignItems:"center",gap:7,cursor:"pointer",fontSize:13,color:"#64748B" }}>
-            <input type="checkbox" style={{ accentColor:T.sky }}/> Remember this device
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:28 }}>
+          <label style={{ display:"flex", alignItems:"center", gap:7, cursor:"pointer", fontSize:12, color:"rgba(255,255,255,0.25)" }}>
+            <input type="checkbox" style={{ accentColor:"#0EA5E9" }}/> Remember this device
           </label>
-          <button style={{ fontSize:13,color:T.sky,background:"none",border:"none",cursor:"pointer",fontWeight:600 }}>Forgot password?</button>
+          <button style={{ fontSize:12, color:"rgba(14,165,233,0.7)", background:"none", border:"none", cursor:"pointer", fontWeight:600 }}>Forgot password?</button>
         </div>
 
-        <button onClick={submit} disabled={loading} className="btn-glow" style={{
-          width:"100%",padding:"13px 0",borderRadius:10,
-          background:loading?"#E2E8F0":`linear-gradient(135deg,${T.sky},${T.skyLt})`,
-          color:loading?"#94A3B8":"#fff",border:"none",fontSize:15,fontWeight:800,cursor:loading?"not-allowed":"pointer",
-          letterSpacing:0.2,display:"flex",alignItems:"center",justifyContent:"center",gap:8,transition:"all 0.2s"
+        <button onClick={submit} disabled={loading} style={{
+          width:"100%", padding:"13px 0", borderRadius:7,
+          background: loading ? "rgba(255,255,255,0.04)" : "#0EA5E9",
+          color: loading ? "rgba(255,255,255,0.2)" : "#fff",
+          border: "1px solid rgba(14,165,233,0.25)",
+          fontSize:12, fontWeight:800, cursor: loading ? "not-allowed" : "pointer",
+          letterSpacing:2, textTransform:"uppercase", fontFamily:"'JetBrains Mono',monospace",
+          display:"flex", alignItems:"center", justifyContent:"center", gap:8, transition:"all 0.2s"
         }}>
-          {loading?<><RefreshCw size={16} style={{ animation:"spin 1s linear infinite" }}/> Authenticating…</>:"Sign in →"}
+          {loading ? <><RefreshCw size={13} style={{ animation:"spin 1s linear infinite" }}/> AUTHENTICATING</> : "AUTHENTICATE →"}
         </button>
 
-        {/* Demo note */}
-        <div style={{ marginTop:28,padding:"14px 16px",background:"#F8FAFC",borderRadius:10,border:"1px solid #E2E8F0" }}>
-          <div style={{ fontSize:11,color:"#64748B",fontWeight:700,marginBottom:4,textTransform:"uppercase",letterSpacing:0.5 }}>Demo access</div>
-          <div style={{ fontSize:12,color:"#64748B" }}>Email: <span style={{ fontFamily:"'JetBrains Mono',monospace",color:T.d0 }}>admin@gridco.com.gh</span></div>
-          <div style={{ fontSize:12,color:"#64748B",marginTop:2 }}>Password: any value</div>
+        <div style={{ marginTop:24, padding:"13px 15px", background:"rgba(255,255,255,0.02)", borderRadius:7, border:"1px solid rgba(255,255,255,0.05)" }}>
+          <div style={{ fontSize:9, color:"rgba(255,255,255,0.18)", fontWeight:700, marginBottom:6, textTransform:"uppercase", letterSpacing:1.5, fontFamily:"'JetBrains Mono',monospace" }}>Demo Access</div>
+          <div style={{ fontSize:12, color:"rgba(255,255,255,0.3)" }}>Email: <span style={{ fontFamily:"'JetBrains Mono',monospace", color:"rgba(255,255,255,0.5)" }}>admin@gridco.com.gh</span></div>
+          <div style={{ fontSize:12, color:"rgba(255,255,255,0.3)", marginTop:2 }}>Password: any value</div>
         </div>
 
-        <p style={{ marginTop:28,fontSize:11,color:"#94A3B8",textAlign:"center",lineHeight:1.7 }}>
-          Authorized GRIDCo personnel only.<br/>
-          © 2025 Ghana Grid Company Limited · ISO 55001 Certified
+        <p style={{ marginTop:24, fontSize:9, color:"rgba(255,255,255,0.12)", textAlign:"center", lineHeight:2, fontFamily:"'JetBrains Mono',monospace", letterSpacing:0.8, textTransform:"uppercase" }}>
+          Authorized GRIDCo Personnel Only<br/>
+          © 2025 Ghana Grid Company Limited · ISO 55001
         </p>
       </div>
     </div>
